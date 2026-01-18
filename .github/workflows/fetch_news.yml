@@ -7,7 +7,7 @@ on:
 
 jobs:
   fetch:
-    runs-on: ubuntu-latest # ubuntuの最新版で実行
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
@@ -18,7 +18,7 @@ jobs:
       - name: Fetch news and update file
         run: |
           API_KEY="b35f9afdc84845b782d4120453db88ea" # ★あなたのキーに置き換える
-          # APIを呼び出し、記事の内容だけを取得して news_data.txt に保存
+          # APIの正しいエンドポイントとキーを使ってデータを取得する
           curl -s "https://newsapi.org" | jq -r '.articles[].content' > news_data.txt
       - name: Commit files
         run: |

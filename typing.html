@@ -25,8 +25,7 @@
 
     <script>
         // !!重要!! News APIなどで無料のAPIキーを取得し、ここに入力してください。
-        // 無料APIはCORS制限がある場合が多く、GitHub Pagesでは動かない可能性があります。
-        const API_KEY = "YOUR_NEWS_API_KEY"; 
+        const API_KEY = "b35f9afdc84845b782d4120453db88ea"; 
         
         const newsTextElement = document.getElementById('news-text');
         const typingArea = document.getElementById('typing-area');
@@ -37,15 +36,14 @@
         let timeLeft = 60;
 
         async function fetchNews() {
-            // CORS制限回避のためのプロキシを使用する例。うまくいかない場合はテキスト直書きに
-            const proxy = 'https://corsproxy.io?'; 
+            // CORS制限回避のためのプロキシを使用
+            const proxy = 'https://corsproxy.io/?'; 
             const url = `${proxy}https://newsapi.org{API_KEY}`;
             
             try {
                 const response = await fetch(url);
                 const data = await response.json();
                 if (data.articles && data.articles.length > 0) {
-                    // contentがない場合descriptionを使う
                     articleContent = data.articles[0].content || data.articles[0].description || "記事本文がありません。";
                     newsTextElement.innerText = articleContent;
                     typingArea.disabled = false;
@@ -56,7 +54,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                newsTextElement.innerText = "エラー: ニュースAPIに接続できませんでした。APIキーまたはCORS設定を確認してください。";
+                newsTextElement.innerText = "エラー: APIキーを確認してください。";
             }
         }
 
@@ -72,9 +70,7 @@
         }
 
         function checkTyping() {
-            const typedText = typingArea.value;
-            // 記事の最後まで打ったら終了
-            if (typedText === articleContent) {
+            if (typingArea.value === articleContent) {
                 clearInterval(timerInterval);
                 endGame();
             }
@@ -84,7 +80,7 @@
             typingArea.disabled = true;
             timerElement.innerText = "終了！";
             const typedChars = typingArea.value.length;
-            const wpm = (typedChars / 60) * (60 - timeLeft); // 速度計算
+            const wpm = (typedChars / 60) * (60 - timeLeft);
             resultElement.innerText = `スコア: ${typedChars}文字 | 速度: 約${wpm.toFixed(0)}文字/分`;
         }
 

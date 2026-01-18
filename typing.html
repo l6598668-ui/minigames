@@ -24,68 +24,60 @@
     <div id="result"></div>
 
     <script>
-    const API_KEY = "b35f9afdc84845b782d4120453db88ea"; // ★あなたのキーに置き換える
-    const newsTextElement = document.getElementById('news-text');
-    const typingArea = document.getElementById('typing-area');
-    const timerElement = document.getElementById('timer');
-    const resultElement = document.getElementById('result');
-    let articleContent = "";
-    let timerInterval;
-    let timeLeft = 60;
+        const newsTextElement = document.getElementById('news-text');
+        const typingArea = document.getElementById('typing-area');
+        const timerElement = document.getElementById('timer');
+        const resultElement = document.getElementById('result');
+        let articleContent = "";
+        let timerInterval;
+        let timeLeft = 60;
 
-    async function fetchNews() {
-        const proxy = 'https://corsproxy.io?'; 
-        // URLの組み立てミスを修正しました
-        const url = `${proxy}https://newsapi.org{API_KEY}`;
-        
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('API request failed');
-            const data = await response.json();
-            
-            if (data.articles && data.articles.length > 0) {
-                articleContent = data.articles[0].content || data.articles[0].description || "記事本文がありません。";
-                newsTextElement.innerText = articleContent;
-                typingArea.disabled = false;
-                typingArea.focus();
-                startTimer();
+        async function fetchNewsTextFile() {
+            // APIではなく、リポジトリ内のテキストファイルを読み込む
+            const response = await fetch('news_data.txt');
+            if (response.ok) {
+                articleContent = await response.text();
+                if (articleContent.trim().length > 0) {
+                    newsTextElement.innerText = articleContent;
+                    typingArea.disabled = false;
+                    typingArea.focus();
+                    startTimer();
+                    document.querySelector('p').innerText = "練習開始！"; 
+                } else {
+                    newsTextElement.innerText = "記事の内容が空です。次の更新を待ってください。";
+                }
             } else {
-                newsTextElement.innerText = "ニュース記事を取得できませんでした。";
+                newsTextElement.innerText = "ニュース記事を読み込めませんでした。Actionsがまだ実行されていないか確認してください。";
             }
-        } catch (error) {
-            console.error(error);
-            newsTextElement.innerText = "エラー: ニュースの読み込みに失敗しました。APIキーを確認してください。";
         }
-    }
 
-    function startTimer() {
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            timerElement.innerText = `残り時間: ${timeLeft}秒`;
-            if (timeLeft <= 0) {
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.innerText = `残り時間: ${timeLeft}秒`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function checkTyping() {
+            if (typingArea.value === articleContent) {
                 clearInterval(timerInterval);
                 endGame();
             }
-        }, 1000);
-    }
-
-    function checkTyping() {
-        if (typingArea.value === articleContent) {
-            clearInterval(timerInterval);
-            endGame();
         }
-    }
 
-    function endGame() {
-        typingArea.disabled = true;
-        timerElement.innerText = "終了！";
-        const typedChars = typingArea.value.length;
-        const wpm = (typedChars / 60) * (60 - timeLeft);
-        resultElement.innerText = `スコア: ${typedChars}文字 | 速度: 約${wpm.toFixed(0)}文字/分`;
-    }
+        function endGame() {
+            typingArea.disabled = true;
+            timerElement.innerText = "終了！";
+            const typedChars = typingArea.value.length;
+            const wpm = (typedChars / 60) * (60 - timeLeft);
+            resultElement.innerText = `スコア: ${typedChars}文字 | 速度: 約${wpm.toFixed(0)}文字/分`;
+        }
 
-    fetchNews();
-</script>
-
+        fetchNewsTextFile();
+    </script>
 </body>
 </html>

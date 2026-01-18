@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 超多機能ツールBOX</title>
+    <style>
+        /* CSS変数は index.html のものを流用できるようにbody直下で定義 */
+        :root {
+            --bg-color: #f0f2f5;
+            --card-color: #ffffff;
+            --text-color: #333;
+        }
+        body { 
+            font-family: sans-serif; 
+            background: var(--bg-color); 
+            margin: 0; 
+            padding: 20px; 
+            color: var(--text-color);
+        }
+        h1 { text-align: center; color: var(--text-color); }
+        /* ダークモード設定は省略。必要なら前回のコードを追記してください */
+
+        /* アイコンが並ぶグリッド */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 各アイコン（ボタン）のスタイルをリンク<a>タグ用に変更 */
+        .menu-item {
+            background: var(--card-color);
+            border-radius: 20px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            text-decoration: none; /* リンクの下線を消す */
+            color: var(--text-color); /* 文字色をCSS変数から取得 */
+        }
+        .menu-item:active { transform: scale(0.9); }
+        .menu-item i { font-size: 30px; margin-bottom: 8px; }
+        .menu-item span { font-size: 12px; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h1>Dashboard 2026</h1>
+
+    <!-- メインメニュー -->
+    <div class="menu-grid">
+        <!-- href属性に、個別のファイル名を設定します -->
+        <a href="weather.html" class="menu-item"><i>☀️</i><span>天気・指数</span></a>
+        <a href="game10s.html" class="menu-item"><i>⏱️</i><span>10秒チャレ</span></a>
+        <a href="gacha.html" class="menu-item"><i>🍽️</i><span>献立ガチャ</span></a>
+        <a href="typing.html" class="menu-item"><i>⌨️</i><span>タイピング</span></a>
+        <!-- 他の機能もここに<a>タグで追加していきます -->
+    </div>
+
+    <!-- JavaScriptは今回は不要です（画面遷移はHTML標準機能で行うため） -->
+</body>
+</html>

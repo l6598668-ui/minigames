@@ -1,23 +1,30 @@
-name: Update Daily News
+307a89a983ee88341541293114b1fdc6f595464ename: Update Daily News
+
 on:
+  workflow_dispatch: # 手動実行ボタン
   workflow_dispatch:
   schedule:
-    - cron: '0 21 * * *'
+    - cron: '0 21 * * *' # 日本時間の毎朝6時に実行
+    - cron: '0 21 * * *' # 日本時間 朝6時
+
 jobs:
   build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Fetch
+@@ -15,11 +15,14 @@ jobs:
+
+      - name: Fetch RSS and Extract Titles
         run: |
-          # RSS専用URLから取得し、ニュースタイトルを抽出してnews.txtに保存
-          curl -sL -A "Mozilla/5.0" "https://news.yahoo.co.jp" | grep -oP '(?<=<title>).*?(?=</title>)' | tail -n +2 > news.txt
-      - name: Push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add news.txt
-          git commit -m "Update" || exit 0
-          git push
+          # 【テスト中】ニュースの代わりに固定文字列を書き込みます
+          echo "これはテスト用のニュースタイトルです。" > news_data.txt
+          echo "テストが成功すればこれが表示されます。" >> news_data.txt
+          # Yahoo!ニュースの主要ニュースRSSからタイトルを取得
+          curl -s https://news.yahoo.co.jp \
+          | grep -oP '(?<=<title>).*?(?=</title>)' \
+          | tail -n +2 \
+          | sed 's/&quot;/"/g; s/&amp;/\&/g; s/&lt;/</g; s/&gt;/>/g; s/&apos;/\x27/g; s/&yen;/¥/g' \
+          > news_data.txt
+          
+          # ファイルの中身をログに出力して確認
+          # ログ出力して確認
+          cat news_data.txt
+
+      - name: Commit and Push

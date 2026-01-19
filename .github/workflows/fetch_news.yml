@@ -15,9 +15,8 @@ jobs:
 
       - name: Fetch RSS for multiple genres
         run: |
-          # コマンドを少し頑丈な書き方に変更しました
           fetch_titles() {
-            curl -s "$1" | grep -oP '(?<=<title>).*?(?=</title>)' | tail -n +2 > "$2"
+            curl -s "$1" | grep -oP '(?i)<title>\K[^<]+(?=</title>)' > "$2"
             echo "--- Contents of $2 ---"
             cat "$2"
             echo "--------------------------"

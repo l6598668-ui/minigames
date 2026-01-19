@@ -3,23 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News Typing</title>
+    <title>News Typing - ジャンル選択版</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 90%; max-width: 500px; text-align: center; }
-        #word { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #333; line-height: 1.4; min-height: 3em; }
-        input { width: 100%; font-size: 18px; padding: 12px; border: 2px solid #ddd; border-radius: 10px; outline: none; box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 600px; text-align: center; }
+        
+        /* ジャンル選択のスタイル */
+        .genre-container { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        select { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; outline: none; }
+        button#change-btn { padding: 8px 15px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: bold; }
+        button#change-btn:hover { background: #0056b3; }
+
+        #word { font-size: 24px; font-weight: bold; margin-bottom: 25px; color: #333; line-height: 1.5; min-height: 3.5em; display: flex; align-items: center; justify-content: center; }
+        input { width: 100%; font-size: 20px; padding: 15px; border: 2px solid #ddd; border-radius: 12px; outline: none; box-sizing: border-box; transition: border-color 0.3s; }
         input:focus { border-color: #007bff; }
-        .info { margin-top: 15px; font-size: 14px; color: #888; }
-        .back { margin-top: 20px; display: block; color: #007bff; text-decoration: none; font-size: 14px; }
+        
+        .info { margin-top: 20px; font-size: 14px; color: #666; display: flex; justify-content: space-between; }
+        .back { margin-top: 25px; display: block; color: #007bff; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .back:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- ジャンル切り替え部分 -->
+    <div class="genre-container">
+        <select id="genre-select">
+            <option value="news_top.txt">主要ニュース</option>
+            <option value="news_business.txt">経済</option>
+            <option value="news_ent.txt">エンタメ</option>
+            <option value="news_it.txt">IT・科学</option>
+        </select>
+        <button id="change-btn" onclick="init()">ジャンル変更</button>
+    </div>
+
     <div id="word">ニュースを読み込んでいます...</div>
-    <input type="text" id="input-field" placeholder="ここに入力してください" autocomplete="off">
-    <div class="info" id="status">残り: --</div>
+    
+    <input type="text" id="input-field" placeholder="ここに入力（完全一致で次へ）" autocomplete="off">
+    
+    <div class="info">
+        <span id="status">残り: -- 件</span>
+        <span id="genre-name">ジャンル: 未選択</span>
+    </div>
+    
     <a href="index.html" class="back">← ホームに戻る</a>
 </div>
 
@@ -27,63 +53,77 @@
     const wordDisplay = document.getElementById('word');
     const inputField = document.getElementById('input-field');
     const statusDisplay = document.getElementById('status');
+    const genreDisplay = document.getElementById('genre-name');
+    const genreSelect = document.getElementById('genre-select');
+
     let newsItems = [];
     let currentIndex = 0;
 
+    // ニュース読み込みメイン処理
     async function init() {
+        const fileName = genreSelect.value;
+        const genreLabel = genreSelect.options[genreSelect.selectedIndex].text;
+        
+        wordDisplay.textContent = "読み込み中...";
+        inputField.value = '';
+        inputField.disabled = true;
+        currentIndex = 0;
+
         try {
-            // ファイルを取得
-            const res = await fetch('./news_data.txt?t=' + Date.now());
+            // キャッシュ対策で現在時刻をパラメータに付与
+            const res = await fetch(`./${fileName}?t=` + Date.now());
             
-            // 200 OK かチェック
             if (!res.ok) {
-                wordDisplay.textContent = "ファイルが見つかりません。";
-                return;
+                throw new Error(`HTTPエラー: ${res.status}`);
             }
 
-            // ★ここで「text」を定義します
             const text = await res.text();
             
-            // ニュースを1行ずつに分ける
+            // 行ごとに分割、空白削除、空行を除去
             newsItems = text.trim().split('\n')
                 .map(item => item.trim()) 
                 .filter(item => item.length > 0); 
 
-            if (newsItems.length > 0) {
-                updateDisplay();
+            if (newsItems.length === 0) {
+                wordDisplay.textContent = "このジャンルのニュースは現在空です。";
             } else {
-                wordDisplay.textContent = "ニュースが空っぽです。";
+                inputField.disabled = false;
+                genreDisplay.textContent = `ジャンル: ${genreLabel}`;
+                updateDisplay();
+                inputField.focus();
             }
         } catch (e) {
-            wordDisplay.textContent = "エラーが発生しました。";
             console.error(e);
+            wordDisplay.textContent = "ニュースが取得できませんでした。Actionsが実行されているか確認してください。";
+            statusDisplay.textContent = "Error: " + e.message;
         }
     }
 
+    // 表示の更新
     function updateDisplay() {
         if (currentIndex < newsItems.length) {
             wordDisplay.textContent = newsItems[currentIndex];
             statusDisplay.textContent = `残り: ${newsItems.length - currentIndex} 件`;
-            inputField.value = ''; // 入力欄を空にする
-            inputField.focus();     // 入力欄にカーソルを合わせる
+            inputField.value = '';
         } else {
-            wordDisplay.textContent = "✨ 本日のニュース終了！ ✨";
+            wordDisplay.textContent = "✨ このジャンルのニュース終了！ ✨";
             inputField.disabled = true;
+            inputField.value = '';
             statusDisplay.textContent = "お疲れ様でした";
         }
     }
 
-    // 入力判定
+    // 入力判定（リアルタイム）
     inputField.addEventListener('input', () => {
-        // 表示されている文字と入力が完全一致したら次のニュースへ
+        // 表示されているニュース文字列と完全に一致したら次へ
         if (inputField.value === newsItems[currentIndex]) {
             currentIndex++;
             updateDisplay();
         }
     });
 
+    // 初回起動
     init();
 </script>
-
 </body>
 </html>

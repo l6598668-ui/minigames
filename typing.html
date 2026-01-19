@@ -33,11 +33,15 @@
     // ニュース読み込み
     async function init() {
         try {
-            // Actionsで書き出されたファイルを読み込む
             const res = await fetch('./news_data.txt?t=' + Date.now());
             if (!res.ok) throw new Error();
             const text = await res.text();
-            newsItems = text.trim().split('\n');
+            
+            // 各行の空白を削除し、空行を除外する処理を追加
+            newsItems = text.trim().split('\n')
+                .map(item => item.trim()) 
+                .filter(item => item.length > 0); 
+
             updateDisplay();
         } catch (e) {
             wordDisplay.textContent = "ニュースがまだありません。Actionsを実行してください。";

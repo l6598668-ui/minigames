@@ -1,4 +1,4 @@
-307a89a983ee88341541293114b1fdc6f595464ename: Update Daily News
+name: Update Daily News
 
 on:
   workflow_dispatch: # 手動実行ボタン

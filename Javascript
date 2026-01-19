@@ -1,0 +1,55 @@
+<script>
+    const wordDisplay = document.getElementById('word');
+    const inputField = document.getElementById('input-field');
+    const statusDisplay = document.getElementById('status');
+    let newsItems = [];
+    let currentIndex = 0;
+
+    async function init() {
+        try {
+            // 1. ファイルを読みに行く
+            const res = await fetch('./news_data.txt?t=' + Date.now());
+            
+            if (!res.ok) throw new Error("File not found");
+
+            // 2. ★重要★ ファイルの「テキスト中身」を取り出す（ここが抜けていました）
+            const text = await res.text();
+            
+            // 3. 改行で区切って配列にする
+            newsItems = text.trim().split('\n')
+                .map(item => item.trim()) 
+                .filter(item => item.length > 0); 
+
+            if (newsItems.length > 0) {
+                updateDisplay();
+            } else {
+                wordDisplay.textContent = "ニュースが空っぽです。";
+            }
+        } catch (e) {
+            wordDisplay.textContent = "ニュースを読み込めませんでした。";
+            console.error(e);
+        }
+    }
+
+    function updateDisplay() {
+        if (currentIndex < newsItems.length) {
+            wordDisplay.textContent = newsItems[currentIndex];
+            statusDisplay.textContent = `残り: ${newsItems.length - currentIndex} 件`;
+            inputField.value = '';
+        } else {
+            wordDisplay.textContent = "✨ 本日のニュース終了！ ✨";
+            inputField.disabled = true;
+            statusDisplay.textContent = "お疲れ様でした";
+        }
+    }
+
+    inputField.addEventListener('input', () => {
+        // 入力した文字がニュースの文字列と完全に一致したら次へ
+        if (inputField.value === newsItems[currentIndex]) {
+            currentIndex++;
+            updateDisplay();
+        }
+    });
+
+    init();
+</script>

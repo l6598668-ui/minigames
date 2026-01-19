@@ -12,7 +12,7 @@
 </head>
 <body>
 <div class="container">
-    <div id="word">ニュースを読み込んでいます...</div>
+    <div id="word">読み込み中...</div>
     <input type="text" id="input-field" autocomplete="off" placeholder="ここにタイピング">
 </div>
 <script>
@@ -25,19 +25,18 @@
         try {
             const res = await fetch('./news.txt?t=' + Date.now());
             if (!res.ok) {
-                wordDisplay.textContent = "news.txtが見つかりません。Actionsを実行してください。";
+                wordDisplay.textContent = "news.txtが見つかりません。Actionsを手動実行してください。";
                 return;
             }
             const text = await res.text();
             newsItems = text.trim().split('\n').filter(line => line.trim() !== "");
-            
             if (newsItems.length === 0) {
                 wordDisplay.textContent = "ニュースが空です。";
             } else {
                 showNext();
             }
         } catch (e) {
-            wordDisplay.textContent = "エラーが発生しました。";
+            wordDisplay.textContent = "読み込みエラー";
         }
     }
 
@@ -46,7 +45,7 @@
             wordDisplay.textContent = newsItems[currentIndex];
             inputField.value = '';
         } else {
-            wordDisplay.textContent = "すべて終了！お疲れ様でした。";
+            wordDisplay.textContent = "すべて終了！";
             inputField.disabled = true;
         }
     }

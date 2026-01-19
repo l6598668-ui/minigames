@@ -3,81 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>タイピング練習</title>
+    <title>News Typing</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        #news-text { border: 1px solid #ccc; padding: 15px; min-height: 150px; white-space: pre-wrap; margin-bottom: 10px; background-color: #f9f9f9; }
-        #typing-area { width: 100%; height: 150px; padding: 15px; box-sizing: border-box; font-size: 16px; resize: none; }
-        #timer, #result { font-size: 24px; font-weight: bold; margin-top: 10px; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 90%; max-width: 500px; text-align: center; }
+        #word { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #333; line-height: 1.4; min-height: 3em; }
+        input { width: 100%; font-size: 18px; padding: 12px; border: 2px solid #ddd; border-radius: 10px; outline: none; box-sizing: border-box; }
+        input:focus { border-color: #007bff; }
+        .info { margin-top: 15px; font-size: 14px; color: #888; }
+        .back { margin-top: 20px; display: block; color: #007bff; text-decoration: none; font-size: 14px; }
     </style>
 </head>
 <body>
-    <a href="index.html">← メニューに戻る</a>
-    <h1>タイピング練習（ニュース）</h1>
-    
-    <p>ニュース記事を読み込み中...</p>
-    <div id="news-text"></div>
-    
-    <textarea id="typing-area" placeholder="ここにニュース記事をタイピングしてください..." oninput="checkTyping()" disabled></textarea>
 
-    <div id="timer">残り時間: 60秒</div>
-    <div id="result"></div>
+<div class="container">
+    <div id="word">ニュースを読み込んでいます...</div>
+    <input type="text" id="input-field" placeholder="ここに入力してください" autocomplete="off">
+    <div class="info" id="status">残り: --</div>
+    <a href="index.html" class="back">← ホームに戻る</a>
+</div>
 
-    <script>
-        const newsTextElement = document.getElementById('news-text');
-        const typingArea = document.getElementById('typing-area');
-        const timerElement = document.getElementById('timer');
-        const resultElement = document.getElementById('result');
-        let articleContent = "";
-        let timerInterval;
-        let timeLeft = 60;
+<script>
+    const wordDisplay = document.getElementById('word');
+    const inputField = document.getElementById('input-field');
+    const statusDisplay = document.getElementById('status');
+    let newsItems = [];
+    let currentIndex = 0;
 
-        async function fetchNewsTextFile() {
-            // APIではなく、リポジトリ内のテキストファイルを読み込む
-            const response = await fetch('news_data.txt');
-            if (response.ok) {
-                articleContent = await response.text();
-                if (articleContent.trim().length > 0) {
-                    newsTextElement.innerText = articleContent;
-                    typingArea.disabled = false;
-                    typingArea.focus();
-                    startTimer();
-                    document.querySelector('p').innerText = "練習開始！"; 
-                } else {
-                    newsTextElement.innerText = "記事の内容が空です。次の更新を待ってください。";
-                }
-            } else {
-                newsTextElement.innerText = "ニュース記事を読み込めませんでした。Actionsがまだ実行されていないか確認してください。";
-            }
+    // ニュース読み込み
+    async function init() {
+        try {
+            // Actionsで書き出されたファイルを読み込む
+            const res = await fetch('./news_data.txt?t=' + Date.now());
+            if (!res.ok) throw new Error();
+            const text = await res.text();
+            newsItems = text.trim().split('\n');
+            updateDisplay();
+        } catch (e) {
+            wordDisplay.textContent = "ニュースがまだありません。Actionsを実行してください。";
         }
+    }
 
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                timerElement.innerText = `残り時間: ${timeLeft}秒`;
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    endGame();
-                }
-            }, 1000);
+    function updateDisplay() {
+        if (currentIndex < newsItems.length) {
+            wordDisplay.textContent = newsItems[currentIndex];
+            statusDisplay.textContent = `残り: ${newsItems.length - currentIndex} 件`;
+            inputField.value = '';
+        } else {
+            wordDisplay.textContent = "✨ 本日のニュース終了！ ✨";
+            inputField.disabled = true;
+            statusDisplay.textContent = "お疲れ様でした";
         }
+    }
 
-        function checkTyping() {
-            if (typingArea.value === articleContent) {
-                clearInterval(timerInterval);
-                endGame();
-            }
+    // 入力判定
+    inputField.addEventListener('input', () => {
+        if (inputField.value === newsItems[currentIndex]) {
+            currentIndex++;
+            updateDisplay();
         }
+    });
 
-        function endGame() {
-            typingArea.disabled = true;
-            timerElement.innerText = "終了！";
-            const typedChars = typingArea.value.length;
-            const wpm = (typedChars / 60) * (60 - timeLeft);
-            resultElement.innerText = `スコア: ${typedChars}文字 | 速度: 約${wpm.toFixed(0)}文字/分`;
-        }
-
-        fetchNewsTextFile();
-    </script>
+    init();
+</script>
 </body>
 </html>

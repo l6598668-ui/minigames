@@ -16,7 +16,8 @@ jobs:
       - name: Fetch RSS for multiple genres
         run: |
           fetch_titles() {
-            curl -s "$1" | grep -oP '(?i)<title>\K[^<]+(?=</title>)' > "$2"
+            # sed コマンドを使って <title>タグの中身だけを抽出します
+            curl -s "$1" | sed -n 's/.*<title>\(.*\)<\/title>.*/\1/p' | tail -n +2 > "$2"
             echo "--- Contents of $2 ---"
             cat "$2"
             echo "--------------------------"

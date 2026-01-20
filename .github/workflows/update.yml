@@ -1,41 +1,13 @@
-name: Update Daily News
-
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 21 * * *' # 日本時間 朝6時
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch RSS and Extract Titles
+      - name: Fetch RSS and Extract Data
         run: |
-          # 1. あなたが提示したURLからRSSを取得
-          # 2. タグの中身だけを抜き出す
-          # 3. サイト名が入る1行目を削除
-          curl -sL "https://news.yahoo.co.jp/rss/topics/top-picks.xml" \
-                - name: Fetch RSS and Extract Data
-          | grep -E "<title>|<link>" \
-          | sed -e 's/<[^>]*>//g' \
-          | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
-          | sed '1,2d' \
-          > news.txt
-
-          
-          # ログで中身を確認
-          echo "--- ニュース抽出結果 ---"
-          cat news.txt
-          echo "------------------------"
-
-          if [ ! -s news.txt ]; then
-            echo "Error: news.txt is empty."
-            exit 1
-          fi
+          curl -sL "https://news.yahoo.co.jp" > raw_rss.xml
+          grep -E "<title>|<link>" raw_rss.xml | \
+          sed -e 's/<[^>]*>//g' | \
+          sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | \
+          sed '1,2d' > news.txt
 
       - name: Commit and Push
         run: |

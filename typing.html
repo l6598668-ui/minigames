@@ -12,13 +12,30 @@
         input:focus { border-color: #007bff; }
         .info { margin-top: 15px; font-size: 14px; color: #888; }
         .back { margin-top: 20px; display: block; color: #007bff; text-decoration: none; font-size: 14px; }
+
+        /* 追加：一覧表示用のスタイル */
+        #news-list-container { text-align: left; margin-bottom: 20px; max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 10px; }
+        .news-item { font-size: 14px; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px; color: #444; }
+        #start-btn { background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 18px; cursor: pointer; width: 100%; }
+        #game-area { display: none; } /* 最初は隠しておく */
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="word">ニュースを読み込んでいます...</div>
-        <input type="text" id="input-field" placeholder="ここに入力してください" autocomplete="off">
-        <div class="info" id="status">残り: --</div>
+        <!-- 初期表示：ニュース一覧 -->
+        <div id="setup-area">
+            <h3>本日のニュース一覧</h3>
+            <div id="news-list-container">ニュースを読み込んでいます...</div>
+            <button id="start-btn" disabled>スタート</button>
+        </div>
+
+        <!-- タイピング画面（最初は非表示） -->
+        <div id="game-area">
+            <div id="word">ニュースを読み込んでいます...</div>
+            <input type="text" id="input-field" placeholder="ここに入力してください" autocomplete="off">
+            <div class="info" id="status">残り: --</div>
+        </div>
+        
         <a href="index.html" class="back">← ホームに戻る</a>
     </div>
 
@@ -26,34 +43,51 @@
     const wordDisplay = document.getElementById('word');
     const inputField = document.getElementById('input-field');
     const statusDisplay = document.getElementById('status');
+    const setupArea = document.getElementById('setup-area');
+    const gameArea = document.getElementById('game-area');
+    const newsListContainer = document.getElementById('news-list-container');
+    const startBtn = document.getElementById('start-btn');
+
     let newsItems = [];
     let currentIndex = 0;
 
     async function init() {
         try {
-            // 1. ファイルを読みに行く
             const res = await fetch('./news.txt?t=' + Date.now());
-            
             if (!res.ok) throw new Error("File not found");
 
-            // 2. ★重要★ ファイルの「テキスト中身」を取り出す（ここが抜けていました）
             const text = await res.text();
             
-            // 3. 改行で区切って配列にする
             newsItems = text.trim().split('\n')
                 .map(item => item.trim()) 
                 .filter(item => item.length > 0); 
 
             if (newsItems.length > 0) {
-                updateDisplay();
+                // 一覧を表示する
+                newsListContainer.innerHTML = '';
+                newsItems.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'news-item';
+                    div.textContent = `${index + 1}. ${item}`;
+                    newsListContainer.appendChild(div);
+                });
+                startBtn.disabled = false;
             } else {
-                wordDisplay.textContent = "ニュースが空っぽです。";
+                newsListContainer.textContent = "ニュースが空っぽです。";
             }
         } catch (e) {
-            wordDisplay.textContent = "ニュースを読み込めませんでした。";
+            newsListContainer.textContent = "ニュースを読み込めませんでした。";
             console.error(e);
         }
     }
+
+    // スタートボタンを押した時の処理
+    startBtn.addEventListener('click', () => {
+        setupArea.style.display = 'none'; // 一覧を消す
+        gameArea.style.display = 'block'; // タイピング画面を出す
+        updateDisplay();
+        inputField.focus(); // すぐに入力できるようにする
+    });
 
     function updateDisplay() {
         if (currentIndex < newsItems.length) {
@@ -68,7 +102,6 @@
     }
 
     inputField.addEventListener('input', () => {
-        // 入力した文字がニュースの文字列と完全に一致したら次へ
         if (inputField.value === newsItems[currentIndex]) {
             currentIndex++;
             updateDisplay();

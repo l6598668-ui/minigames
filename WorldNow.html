@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
-        #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #player { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            /* YouTubeプレイヤー内のイベントを無効にする */
+            pointer-events: none; 
+        }
         
         /* スタート画面のスタイル */
         #overlay {
@@ -22,7 +26,7 @@
     </div>
     <div id="player"></div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://www.youtube.com"></script>
 <script>
     const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'h_m-m4vW9Xk', 'v6Nf0Wf8S_0']; 
     let currentIndex = 0;
@@ -35,14 +39,17 @@
             videoId: videoList[currentIndex],
             playerVars: { 
                 'autoplay': 0, // 最初は止めておく
-                'controls': 0, 
+                'controls': 0, // コントロールを非表示
                 'mute': 0,     // 音あり設定
-                'playsinline': 1
+                'playsinline': 1,
+                'origin': window.location.origin // CORS対策
             }
         });
     }
 
     function startTour() {
+        if (!player || typeof player.playVideo !== 'function') return;
+
         // オーバーレイを消す
         document.getElementById('overlay').style.display = 'none';
         
@@ -56,10 +63,16 @@
     }
 
     function nextDestination() {
+         if (!player || typeof player.loadVideoById !== 'function') return;
+
         currentIndex = (currentIndex + 1) % videoList.length;
         player.loadVideoById(videoList[currentIndex]);
+        
         // 切り替え時もミュートを解除する（念のため）
-        player.unMute();
+        setTimeout(() => {
+             player.unMute();
+             player.setVolume(50);
+        }, 500);
     }
 </script>
 </body>

@@ -28,8 +28,8 @@
 </head>
 <body>
 
-    <!-- ボタンの初期テキストを「読み込み中...」に変更 -->
     <div id="overlay" onclick="startTour()">
+        <!-- 初期テキストを「読み込み中...」に変更 -->
         <button id="start-btn">読み込み中...</button>
     </div>
 
@@ -45,8 +45,14 @@
     let currentIndex = 0;
     let player;
     let isTourStarted = false;
-    let isPlayerReady = false; // プレーヤー準備完了フラグ
 
+    // ★追加：3秒後にボタンのテキストを変更する
+    document.addEventListener('DOMContentLoaded', (event) => {
+        setTimeout(() => {
+            document.getElementById('start-btn').innerText = "世界へ旅に出る（音あり）";
+        }, 3000);
+    });
+    
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
             height: '100%',
@@ -59,47 +65,38 @@
                 'rel': 0,
                 'iv_load_policy': 3,
                 'modestbranding': 1,
-                'mute': 1 
+                'mute': 1 // 最初はミュートで読み込む（再生エラー防止）
             },
             events: {
                 'onStateChange': onPlayerStateChange
-                // onReadyイベントは使わず、setTimeoutで強制的に準備完了にする
             }
         });
-
-        // ★追加：3秒後に強制的にボタンを有効にする
-        setTimeout(() => {
-            isPlayerReady = true;
-            document.getElementById('start-btn').innerText = "世界へ旅に出る（音あり）";
-        }, 3000);
     }
 
     function onPlayerStateChange(event) {
+        // 再生が始まったら音を出して、カーテンを開ける準備をする
         if (event.data === YT.PlayerState.PLAYING) {
             player.unMute();
             player.setVolume(50);
             
+            // 5秒後にカーテンを消す（タイトルが消えるのを待つ）
             setTimeout(() => {
                 document.getElementById('curtain').style.display = 'none';
             }, 5000);
         }
 
+        // 強制停止防止
         if (isTourStarted && event.data === YT.PlayerState.PAUSED) {
             player.playVideo();
         }
     }
 
     function startTour() {
-        // ★修正：isPlayerReadyがtrue（3秒経過後）でないと実行しない
-        if (!isPlayerReady) {
-            return; 
-        }
-
         isTourStarted = true;
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('curtain').style.display = 'block';
         
-        player.playVideo(); 
+        player.playVideo(); // 再生開始（onStateChangeでアンミュートされる）
         setInterval(nextDestination, 60000); 
     }
 
@@ -108,6 +105,7 @@
         
         currentIndex = (currentIndex + 1) % videoList.length;
         
+        // 再生を確実にするため、一旦ミュートでロードする
         player.mute();
         player.loadVideoById(videoList[currentIndex]);
         player.playVideo();

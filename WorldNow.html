@@ -2,51 +2,46 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>世界一周 窓の旅</title>
+    <title>動作確認用 窓の旅</title>
     <style>
         body { background: #e6e9ed; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-
-        /* 飛行機の窓 */
         .window {
-            position: relative; 
-            width: 500px;  /* 横幅 */
-            height: 600px; /* 縦幅 */
-            background: #000;
-            border: 25px solid #fdfdfd; 
-            border-radius: 150px; 
-            overflow: hidden; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 0 30px rgba(0,0,0,1); 
-            z-index: 1;
+            position: relative; width: 400px; height: 600px; background: #000;
+            border: 25px solid #fdfdfd; border-radius: 150px; overflow: hidden; z-index: 1;
         }
-
-        /* 埋め込み動画用のコンテナ */
-        .video-container { 
-            position: absolute; 
-            top: 0; 
-            left: -25%; 
-            width: 150%; 
-            height: 100%; 
-        }
-
-        iframe { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
-        }
+        .video-container { position: absolute; top: 0; left: -25%; width: 150%; height: 100%; }
+        iframe { width: 100%; height: 100%; pointer-events: none; border: none; }
+        #start-screen { position: fixed; inset: 0; background: #1a1a1a; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        button { padding: 18px 50px; border-radius: 40px; border: none; font-size: 20px; cursor: pointer; font-weight: bold; background: white; color: black; }
     </style>
 </head>
 <body>
 
-    <div class="window">
-        <div class="video-container">
-             <!-- あなたが送ってくれたURLの埋め込みコードを直接貼り付け -->
-             <iframe
-                src="https://www.youtube.com"
-                allow="autoplay; encrypted-media"
-                allowfullscreen>
-             </iframe>
-        </div>
+    <div id="start-screen">
+        <h2>動作確認 WORLD WINDOW</h2>
+        <button onclick="startApp()">搭乗する</button>
     </div>
 
+    <div class="window">
+        <div class="video-container" id="player-box"></div>
+    </div>
+
+    <script>
+        function startApp() {
+            document.getElementById('start-screen').style.display = 'none';
+            playTestVideo();
+        }
+
+        function playTestVideo() {
+            const testVideoId = '9bZkp7q19f0'; // 標準的なYouTube動画ID
+            const playerBox = document.getElementById('player-box');
+            playerBox.innerHTML = `
+                <iframe
+                    src="https://www.youtube.com{testVideoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen>
+                </iframe>`;
+        }
+    </script>
 </body>
 </html>

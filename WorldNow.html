@@ -1,33 +1,19 @@
-<div id="player"></div>
+<div id="video-container" style="position:relative; width:560px; height:315px;">
+  <iframe id="myVideo" width="560" height="315" 
+    src="https://www.youtube.com/embed/OuCbntsMsWY?si=07McOiyJUwJfMQod" 
+    frameborder="0" style="pointer-events: none;"></iframe>
+  
+  <!-- 画面全体を覆う透明な板（これをクリックすると再生開始） -->
+  <div id="overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; cursor:pointer; background:rgba(0,0,0,0.01);"></div>
+</div>
 
 <script>
-  var tag = document.createElement('script');
-  tag.src = "https://www.youtube.com/embed/OuCbntsMsWY?si=07McOiyJUwJfMQod";
-  var firstScriptTag = document.getElementsByTagName('script')[0];
-  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  const overlay = document.getElementById('overlay');
+  const iframe = document.getElementById('myVideo');
 
-  var player;
-  function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-      height: '315',
-      width: '560',
-      videoId: 'OuCbntsMsWY',
-      playerVars: {
-        'autoplay': 1,
-        'mute': 1,
-        'controls': 0,
-        'loop': 1,
-        'playlist': 'OuCbntsMsWY',
-        'playsinline': 1
-      },
-      events: {
-        'onReady': onPlayerReady
-      }
-    });
-  }
-
-  function onPlayerReady(event) {
-    event.target.playVideo();
-  }
+  overlay.addEventListener('click', () => {
+    // YouTubeのAPIに再生を命令する
+    iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+    overlay.style.display = 'none'; // クリック後は透明な板を消す
+  });
 </script>
-<style>#player { pointer-events: none; }</style>

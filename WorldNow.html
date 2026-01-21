@@ -7,13 +7,20 @@
         #player-container { position: relative; width: 100%; height: 100%; }
         #player { width: 100%; height: 100%; }
         
-        /* 透明なガードレイヤー：クリックやタップをすべて無効化する */
+        /* クリック防止ガード */
         #guard {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 5; background: rgba(0,0,0,0); /* 完全透明 */
+            z-index: 5; background: rgba(0,0,0,0);
         }
 
-        /* スタート画面 */
+        /* 切り替え時・開始時の「目隠し」カーテン */
+        #curtain {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 6; /* ガードより上に配置 */
+            display: none; /* 最初はオフ */
+        }
+
+        /* スタート画面（完全に真っ黒） */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; justify-content: center; align-items: center;
@@ -29,17 +36,17 @@
     </div>
 
     <div id="player-container">
-        <!-- 動画の上のガード -->
+        <div id="curtain"></div>
         <div id="guard"></div>
         <div id="player"></div>
     </div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://www.youtube.com"></script>
 <script>
-    // ライブカメラIDリスト
     const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'h_m-m4vW9Xk', 'v6Nf0Wf8S_0']; 
     let currentIndex = 0;
     let player;
+    let isStarted = false;
 
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
@@ -48,11 +55,11 @@
             videoId: videoList[currentIndex],
             playerVars: { 
                 'autoplay': 0,
-                'controls': 0,    // コントロール非表示
-                'disablekb': 1,  // キーボード操作無効
-                'rel': 0,         // 関連動画非表示
-                'iv_load_policy': 3, // アノテーション非表示
-                'modestbranding': 1  // YouTubeロゴを最小限に
+                'controls': 0,
+                'disablekb': 1,
+                'rel': 0,
+                'iv_load_policy': 3,
+                'modestbranding': 1
             },
             events: {
                 'onStateChange': onPlayerStateChange
@@ -60,15 +67,29 @@
         });
     }
 
-    // もし何らかの理由で停止されたら強制再生する
     function onPlayerStateChange(event) {
-        if (event.data === YT.PlayerState.PAUSED) {
+        // 一時停止されたら強制再生
+        if (isStarted && event.data === YT.PlayerState.PAUSED) {
             player.playVideo();
         }
     }
 
+    function showCurtain() {
+        const curtain = document.getElementById('curtain');
+        curtain.style.display = 'block';
+        // 5秒後にカーテンを開ける（タイトルが消えるのを待つ）
+        setTimeout(() => {
+            curtain.style.display = 'none';
+        }, 5000);
+    }
+
     function startTour() {
+        isStarted = true;
         document.getElementById('overlay').style.display = 'none';
+        
+        // 最初の開始時にもカーテンを引く
+        showCurtain();
+        
         player.unMute();
         player.setVolume(50);
         player.playVideo();
@@ -77,6 +98,9 @@
     }
 
     function nextDestination() {
+        // 次の動画へ行くときもカーテンを引く
+        showCurtain();
+        
         currentIndex = (currentIndex + 1) % videoList.length;
         player.loadVideoById(videoList[currentIndex]);
         player.unMute();

@@ -4,51 +4,44 @@
     <meta charset="UTF-8">
     <title>World Tour Webcam</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: "Helvetica Neue", Arial, sans-serif; }
-        #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
+        #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        /* スタート画面のスタイル */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 10; color: white;
+            justify-content: center; align-items: center; z-index: 10; color: white;
         }
         .btn-container { display: flex; gap: 20px; }
         .start-btn {
             padding: 15px 30px; font-size: 18px; border: 2px solid white;
-            background: none; color: white; cursor: pointer; transition: 0.3s;
+            background: none; color: white; cursor: pointer; opacity: 0.5; pointer-events: none; /* 最初は押せなくする */
         }
-        .start-btn:hover { background: white; color: black; }
-        
-        /* 現在の状態表示（左下に小さく表示） */
-        #status {
-            position: absolute; bottom: 20px; left: 20px; z-index: 5;
-            color: rgba(255,255,255,0.5); font-size: 12px; pointer-events: none;
-        }
+        /* API準備完了後に適用するクラス */
+        .ready { opacity: 1 !important; pointer-events: auto !important; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <h1 style="margin-bottom: 30px;">World Tour</h1>
+        <h1 id="msg">Loading...</h1>
         <div class="btn-container">
-            <button class="start-btn" onclick="startTour(true)">音ありで旅に出る</button>
-            <button class="start-btn" onclick="startTour(false)">音なしで旅に出る</button>
+            <button id="btn-audio" class="start-btn" onclick="startTour(true)">音ありで旅に出る</button>
+            <button id="btn-mute" class="start-btn" onclick="startTour(false)">音なしで旅に出る</button>
         </div>
     </div>
 
     <div id="player"></div>
-    <div id="status"></div>
 
 <script src="https://www.youtube.com"></script>
 <script>
-    // ライブカメラIDリスト
     const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'v6Nf0Wf8S_0', '5_XidpxV960']; 
     let currentIndex = 0;
     let player;
-    let isMuted = true; // 音設定のフラグ
+    let isMuted = true;
+    let isPlayerReady = false; // 準備完了フラグ
 
+    // APIの準備ができたら呼ばれる
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
             height: '100%',
@@ -57,55 +50,56 @@
             playerVars: { 
                 'autoplay': 0,
                 'controls': 0, 
-                'rel': 0,
                 'playsinline': 1
             },
             events: {
-                'onReady': () => console.log("Player Ready")
+                'onReady': onPlayerReady // プレイヤーの準備ができたら実行
             }
         });
     }
 
+    function onPlayerReady(event) {
+        isPlayerReady = true;
+        document.getElementById('msg').innerText = "World Tour";
+        // ボタンを押せるようにする
+        document.getElementById('btn-audio').classList.add('ready');
+        document.getElementById('btn-mute').classList.add('ready');
+    }
+
     function startTour(soundOn) {
-        isMuted = !soundOn; // 音ありならisMutedはfalse
-        
-        // オーバーレイを非表示にする
+        // 安全策：もし何らかの理由でplayerが未定義なら処理を中断
+        if (!player || !isPlayerReady) return;
+
+        isMuted = !soundOn;
         document.getElementById('overlay').style.display = 'none';
         
-        // 音量設定を適用
         applyAudioSettings();
-        
         player.playVideo();
-        updateStatus();
 
-        // 1分ごとに切り替え
         setInterval(nextDestination, 60000); 
     }
 
     function nextDestination() {
+        if (!player || !isPlayerReady) return;
+
         currentIndex = (currentIndex + 1) % videoList.length;
-        
-        // 動画をロード（この時点では前回の音設定を引き継がない場合があるため明示的に制御）
         player.loadVideoById(videoList[currentIndex]);
         
-        // 動画読み込み完了タイミングで再度音量を設定
-        // loadVideoByIdの後は少し遅延させないとミュート設定が効かないことがある
-        setTimeout(applyAudioSettings, 1000);
-        updateStatus();
+        // 動画の読み込み開始直後に設定を再適用
+        // 読み込み完了イベントを待たなくてもAPIが命令をキューに入れてくれます
+        applyAudioSettings();
     }
 
     function applyAudioSettings() {
-        if (isMuted) {
-            player.mute();
-        } else {
-            player.unMute();
-            player.setVolume(50); // 音量は50%に固定（お好みで）
+        // playerが定義されているか、関数が存在するかを二重チェック
+        if (player && typeof player.mute === 'function') {
+            if (isMuted) {
+                player.mute();
+            } else {
+                player.unMute();
+                player.setVolume(50);
+            }
         }
-    }
-
-    function updateStatus() {
-        const mode = isMuted ? "ミュート中" : "音あり再生中";
-        document.getElementById('status').innerText = `現在: ${currentIndex + 1}/${videoList.length} (${mode})`;
     }
 </script>
 </body>

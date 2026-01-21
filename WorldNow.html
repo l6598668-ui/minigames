@@ -1,58 +1,28 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>World Tour Webcam</title>
     <style>
-        /* 全体の背景を黒にし、画面いっぱいに広げる */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
-        /* YouTubeプレイヤーのコンテナ */
         #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        /* スタート画面のスタイル (ダーク背景・白文字・中央揃え) */
+        /* スタート画面のスタイル */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); /* 半透明の黒背景 */
-            display: flex; 
-            flex-direction: column; /* 要素を縦に並べる */
-            justify-content: center; 
-            align-items: center;
-            z-index: 10; 
-            color: white; /* テキスト色を白に */
-            cursor: pointer;
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
+            z-index: 10; color: white; cursor: pointer;
         }
-
-        /* World Tour タイトルのスタイル */
-        #main-title {
-            font-size: 36px;
-            margin-bottom: 50px; /* ボタンとの間にスペースを開ける */
-            text-align: center;
-        }
-        
-        /* ボタンのスタイル (画像通りの白枠デザイン) */
-        #start-btn { 
-            padding: 20px 40px; 
-            font-size: 20px; 
-            border: 2px solid white; /* 白い枠線 */
-            background: none; /* 背景なし */
-            color: white; /* 白い文字 */
-            cursor: pointer; 
-            /* 画像のようにボタン本体がクリックをハンドルするように、親のcursor: pointerを上書き */
-            cursor: pointer; 
-        }
+        #start-btn { padding: 20px 40px; font-size: 20px; border: 2px solid white; background: none; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <!-- overlay全体ではなく、ボタンがクリックされた時にイベントを発火させるように変更 -->
-    <div id="overlay">
-        <div id="main-title">World Tour</div>
-        <!-- ボタン単体にonclickイベントを設定 -->
-        <button id="start-btn" onclick="startTour()">世界へ旅に出る（音あり）</button>
+    <div id="overlay" onclick="startTour()">
+        <button id="start-btn">世界へ旅に出る（音あり）</button>
     </div>
     <div id="player"></div>
 
-<script src="https://www.youtube.com"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
     const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'h_m-m4vW9Xk', 'v6Nf0Wf8S_0']; 
     let currentIndex = 0;
@@ -67,19 +37,12 @@
                 'autoplay': 0, // 最初は止めておく
                 'controls': 0, 
                 'mute': 0,     // 音あり設定
-                'playsinline': 1,
-                'origin': window.location.origin // CORS/CORB対策
+                'playsinline': 1
             }
         });
     }
 
     function startTour() {
-        // 安全策：playerオブジェクトが準備できていない場合は処理を中断
-        if (!player || typeof player.playVideo !== 'function') {
-            console.error("YouTube player is not ready.");
-            return;
-        }
-        
         // オーバーレイを消す
         document.getElementById('overlay').style.display = 'none';
         
@@ -93,16 +56,76 @@
     }
 
     function nextDestination() {
-         if (!player || typeof player.loadVideoById !== 'function') return;
-
         currentIndex = (currentIndex + 1) % videoList.length;
         player.loadVideoById(videoList[currentIndex]);
-        
         // 切り替え時もミュートを解除する（念のため）
-        setTimeout(() => {
-             player.unMute();
-             player.setVolume(50);
-        }, 500);
+        player.unMute();
+    }
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
+        #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        
+        /* スタート画面のスタイル */
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
+            z-index: 10; color: white; cursor: pointer;
+        }
+        #start-btn { padding: 20px 40px; font-size: 20px; border: 2px solid white; background: none; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="overlay" onclick="startTour()">
+        <button id="start-btn">世界へ旅に出る（音あり）</button>
+    </div>
+    <div id="player"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+    const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'h_m-m4vW9Xk', 'v6Nf0Wf8S_0']; 
+    let currentIndex = 0;
+    let player;
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            height: '100%',
+            width: '100%',
+            videoId: videoList[currentIndex],
+            playerVars: { 
+                'autoplay': 0, // 最初は止めておく
+                'controls': 0, 
+                'mute': 0,     // 音あり設定
+                'playsinline': 1
+            }
+        });
+    }
+
+    function startTour() {
+        // オーバーレイを消す
+        document.getElementById('overlay').style.display = 'none';
+        
+        // ユーザーの操作直後に再生を開始することで、音が出るようになる
+        player.unMute();
+        player.setVolume(50);
+        player.playVideo();
+
+        // 1分ごとに切り替え開始
+        setInterval(nextDestination, 60000); 
+    }
+
+    function nextDestination() {
+        currentIndex = (currentIndex + 1) % videoList.length;
+        player.loadVideoById(videoList[currentIndex]);
+        // 切り替え時もミュートを解除する（念のため）
+        player.unMute();
     }
 </script>
 </body>

@@ -13,7 +13,7 @@ jobs:
 
       - name: Fetch RSS and Extract Data
         run: |
-          curl -sL "https://news.yahoo.co.jp" > raw_rss.xml
+          curl -sL "https://news.yahoo.co.jp/rss/topics/top-picks.xml" > raw_rss.xml
           
           # 日本時間に設定して1行目に時刻を書き込む
           export TZ="Asia/Tokyo"

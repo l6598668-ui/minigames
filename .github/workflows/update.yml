@@ -13,7 +13,7 @@ jobs:
 
       - name: Fetch RSS and Extract Data
         run: |
-          curl -sL "https://news.yahoo.co.jp" > raw_rss.xml
+          curl -sL "https://news.yahoo.co.jp/rss/topics/top-picks.xml" > raw_rss.xml
           # <item>以降を抽出し、タイトルとリンクのみを取得して整形
           sed -n '/<item>/,$p' raw_rss.xml | \
           grep -E "<title>|<link>" | \

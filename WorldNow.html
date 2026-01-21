@@ -4,65 +4,44 @@
     <meta charset="UTF-8">
     <title>World Tour Webcam</title>
     <style>
-        /* 全体の背景を黒にし、画面いっぱいに広げる */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
-        /* YouTubeプレイヤーのコンテナ */
         #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        /* スタート画面のスタイル (ダークテーマ) */
+        /* スタート画面のスタイル (白背景・黒文字) */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); /* 半透明の黒背景 */
-            display: flex; flex-direction: column; /* 縦並び */
-            justify-content: center; align-items: center;
-            z-index: 10; color: white; /* テキスト色を白に */
-        }
-        /* ボタンのコンテナ */
-        .btn-container { display: flex; gap: 20px; }
-        /* ボタンのスタイル (白枠のシンプルなデザイン) */
-        .start-btn {
-            padding: 15px 30px; font-size: 18px;
-            border: 2px solid white; /* 白い枠線 */
-            background: none; /* 背景なし */
-            color: white; /* 文字色を白 */
+            background: rgba(255, 255, 255, 0.95); /* 白背景 */
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10; color: black; /* テキスト色を黒に */
             cursor: pointer;
-            transition: background 0.3s; /* ホバー時の変化を滑らかに */
         }
-        .start-btn:hover {
-            background: white; /* ホバーで背景白、文字黒 */
-            color: black;
+        /* ボタンのスタイル (白背景・黒文字) */
+        #start-btn {
+            padding: 20px 40px; font-size: 20px;
+            border: 2px solid black; /* 黒い枠線 */
+            background: white; /* 白い背景 */
+            color: black; /* 黒い文字 */
+            cursor: pointer;
+            transition: background 0.3s;
         }
-
-        /* 現在の状態表示（左下に小さく表示） */
-        #status {
-            position: absolute; bottom: 20px; left: 20px; z-index: 5;
-            color: rgba(255,255,255,0.5); font-size: 12px; pointer-events: none;
+        #start-btn:hover {
+            background: #f0f0f0; /* ホバーで少しグレーに */
         }
     </style>
 </head>
 <body>
 
-    <div id="overlay">
-        <h1 style="margin-bottom: 30px;">World Tour</h1>
-        <div class="btn-container">
-             <!-- onclickハンドラに関数を呼び出すように修正 -->
-            <button class="start-btn" onclick="startTour(true)">音ありで旅に出る</button>
-            <button class="start-btn" onclick="startTour(false)">音なしで旅に出る</button>
-        </div>
+    <!-- ここをクリックするとstartTourが呼ばれる -->
+    <div id="overlay" onclick="startTour()">
+        <button id="start-btn">世界へ旅に出る</button>
     </div>
-
     <div id="player"></div>
-    <div id="status"></div>
 
 <script src="https://www.youtube.com"></script>
 <script>
-    // YouTube APIの準備ができるまでボタンを無効化する処理が必要ですが、
-    // ここではシンプルに、ユーザーがクリックするまでの遅延を許容します。
-    
     const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'h_m-m4vW9Xk', 'v6Nf0Wf8S_0']; 
     let currentIndex = 0;
     let player;
-    let isMuted = true; // 音設定のフラグをデフォルトでミュートに設定
 
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
@@ -70,61 +49,42 @@
             width: '100%',
             videoId: videoList[currentIndex],
             playerVars: { 
-                'autoplay': 0, // 最初は止めておく
+                'autoplay': 0, 
                 'controls': 0, 
-                'rel': 0,
-                'mute': 1,     // API読み込み時は一旦ミュートで開始（安全策）
-                'playsinline': 1
-            },
-            events: {
-                'onReady': () => console.log("Player Ready")
+                'mute': 0,     // 音あり設定（ブラウザ制限のため最初は無音）
+                'playsinline': 1,
+                'origin': window.location.origin // CORS/CORB対策
             }
         });
     }
 
-    function startTour(soundOn) {
-        // 安全策: playerオブジェクトが準備できていない場合は処理を中断
-        if (!player || typeof player.playVideo !== 'function') {
-            console.error("YouTube player is not ready.");
-            return;
-        }
+    function startTour() {
+        // 安全策：playerが未定義でないことを確認
+        if (!player || typeof player.playVideo !== 'function') return;
 
-        isMuted = !soundOn; // 音ありならisMutedはfalse
-        
+        // オーバーレイを消す
         document.getElementById('overlay').style.display = 'none';
         
-        applyAudioSettings(); // 設定を適用
+        // ユーザーの操作直後に再生を開始することで、音が出るようになる
+        player.unMute();
+        player.setVolume(50);
         player.playVideo();
-        updateStatus();
 
+        // 60秒（1分）ごとに次の動画に切り替え
         setInterval(nextDestination, 60000); 
     }
 
     function nextDestination() {
-        if (!player || typeof player.loadVideoById !== 'function') return;
+         if (!player || typeof player.loadVideoById !== 'function') return;
 
         currentIndex = (currentIndex + 1) % videoList.length;
         player.loadVideoById(videoList[currentIndex]);
-
-        // 動画読み込み完了タイミングで再度音量を設定
-        setTimeout(applyAudioSettings, 1000);
-        updateStatus();
-    }
-
-    function applyAudioSettings() {
-         if (player && typeof player.mute === 'function') {
-            if (isMuted) {
-                player.mute();
-            } else {
-                player.unMute();
-                player.setVolume(50);
-            }
-        }
-    }
-
-    function updateStatus() {
-        const mode = isMuted ? "ミュート中" : "音あり再生中";
-        document.getElementById('status').innerText = `現在: ${currentIndex + 1}/${videoList.length} (${mode})`;
+        // 切り替え時もミュートを解除する（念のため）
+        // loadVideoByIdの後に設定が確実に適用されるよう、少し遅延させるのが安定します
+        setTimeout(() => {
+             player.unMute();
+             player.setVolume(50);
+        }, 500);
     }
 </script>
 </body>

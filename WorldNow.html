@@ -16,42 +16,34 @@
         #curtain {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 6; display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
+            flex-direction: column; justify-content: center; align-items: center; color: white;
         }
 
+        /* 国名と時刻の表示 */
+        #info-display {
+            position: absolute; bottom: 40px; left: 40px; z-index: 7;
+            color: white; text-shadow: 2px 2px 8px rgba(0,0,0,1);
+            pointer-events: none; font-weight: bold;
+        }
+        #info-country { font-size: 32px; margin-bottom: 5px; }
+        #info-time { font-size: 24px; opacity: 0.9; }
+
         .loader {
-            border: 5px solid #333;
-            border-top: 5px solid #fff;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            border: 5px solid #333; border-top: 5px solid #fff; border-radius: 50%;
+            width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; justify-content: center; align-items: center;
             z-index: 10; color: white;
         }
-        
         #start-btn { 
             padding: 20px 40px; font-size: 20px; border: 2px solid white; background: none; color: white;
-            cursor: wait;
-            opacity: 0.5;
+            cursor: wait; opacity: 0.5;
         }
-        
-        #start-btn.enabled {
-            cursor: pointer;
-            opacity: 1.0;
-        }
+        #start-btn.enabled { cursor: pointer; opacity: 1.0; }
     </style>
 </head>
 <body>
@@ -61,6 +53,10 @@
     </div>
 
     <div id="player-container">
+        <div id="info-display">
+            <div id="info-country"></div>
+            <div id="info-time"></div>
+        </div>
         <div id="curtain">
             <div class="loader"></div>
             <div style="font-size: 24px; letter-spacing: 2px;">読み込み中...</div>
@@ -69,11 +65,20 @@
         <div id="player"></div>
     </div>
 
+<!-- ご指定の正しいリンク -->
 <script src="https://www.youtube.com/iframe_api"></script>
+
 <script>
-    const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'h_m-m4vW9Xk', 'v6Nf0Wf8S_0']; 
-    let currentIndex = 0;
+    // ライブカメラリスト
+    const videoList = [
+        { id: 'OuCbntsMsWY', name: '日本 - 千葉 - 成田国際空港', tz: 'Asia/Tokyo' },
+        { id: 'rnXIjl_Rzy4', name: 'アメリカ - ニューヨーク - タイムズスクエア', tz: 'America/New_York' },
+        { id: 'KdXa0xp7jLs', name: 'アメリカ - ニューヨーク - 自由の女神像', tz: 'America/New_York' },
+        { id: 'R__e74ULCXQ', name: 'アメリカ - ラスベガス - ベラージオ植物園', tz: 'America/Los_Angeles' }
+    ];
+
     let player;
+    let currentVideo = null;
     let isTourStarted = false;
     let isButtonEnabled = false;
 
@@ -87,32 +92,23 @@
     });
 
     function onYouTubeIframeAPIReady() {
+        currentVideo = videoList[Math.floor(Math.random() * videoList.length)];
         player = new YT.Player('player', {
-            height: '100%',
-            width: '100%',
-            videoId: videoList[currentIndex],
-            playerVars: { 
-                'autoplay': 0, 'controls': 0, 'disablekb': 1, 'rel': 0, 
-                'iv_load_policy': 3, 'modestbranding': 1, 'mute': 1 
-            },
-            events: {
-                'onStateChange': onPlayerStateChange
-            }
+            height: '100%', width: '100%', videoId: currentVideo.id,
+            playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'rel': 0, 'iv_load_policy': 3, 'modestbranding': 1, 'mute': 1 },
+            events: { 'onStateChange': onPlayerStateChange }
         });
     }
 
     function onPlayerStateChange(event) {
         if (event.data === YT.PlayerState.PLAYING) {
-            // ★重要：広告が出ているかチェック。1なら広告中。
             const isAd = player.getAdState && player.getAdState() === 1;
-            
             if (isAd) {
-                // 広告なら黒画面のまま即座に次の動画へ
                 nextDestination();
             } else {
-                // 広告でない（本編）なら5秒後にカーテンを開ける
                 player.unMute();
                 player.setVolume(50);
+                updateInfoText();
                 setTimeout(() => {
                     document.getElementById('curtain').style.display = 'none';
                 }, 5000);
@@ -125,24 +121,42 @@
 
     function startTour() {
         if (!isButtonEnabled) return; 
-
         isTourStarted = true;
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('curtain').style.display = 'flex';
-        
         player.playVideo();
         setInterval(nextDestination, 60000); 
+        setInterval(updateTimeOnly, 1000);
     }
 
     function nextDestination() {
-        // playerが準備できていないときのエラー防止
         if(!player || typeof player.loadVideoById !== 'function') return;
-
         document.getElementById('curtain').style.display = 'flex';
-        currentIndex = (currentIndex + 1) % videoList.length;
+        
+        let nextVideo;
+        do {
+            nextVideo = videoList[Math.floor(Math.random() * videoList.length)];
+        } while (nextVideo.id === currentVideo.id);
+        
+        currentVideo = nextVideo;
         player.mute();
-        player.loadVideoById(videoList[currentIndex]);
+        player.loadVideoById(currentVideo.id);
         player.playVideo();
+    }
+
+    function updateInfoText() {
+        document.getElementById('info-country').innerText = currentVideo.name;
+        updateTimeOnly();
+    }
+
+    function updateTimeOnly() {
+        if (!currentVideo) return;
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('ja-JP', { 
+            timeZone: currentVideo.tz, 
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+        document.getElementById('info-time').innerText = timeStr;
     }
 </script>
 </body>

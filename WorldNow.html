@@ -8,9 +8,11 @@
         #player-container { position: relative; width: 100%; height: 100%; }
         #player { width: 100%; height: 100%; }
         
+        /* ガードを強化（クリックやドラッグを完全に遮断） */
         #guard {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 5; background: rgba(0,0,0,0);
+            pointer-events: auto;
         }
 
         #curtain {
@@ -27,6 +29,7 @@
         #info-country { font-size: 32px; margin-bottom: 5px; }
         #info-time { font-size: 24px; opacity: 0.9; }
 
+        /* 白色プログレスバー */
         #progress-container {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 6px;
             background: rgba(255, 255, 255, 0.1); z-index: 8; display: none;
@@ -35,7 +38,7 @@
         #progress-bar {
             height: 100%; width: 100%; background: #ffffff;
             transition: transform linear;
-            transform-origin: right; /* 左から右へ消える */
+            transform-origin: right;
         }
 
         .loader {
@@ -75,6 +78,7 @@
             <div style="font-size: 24px; letter-spacing: 2px;">読み込み中...</div>
         </div>
         <div id="guard"></div>
+        <!-- PiP禁止設定をHTML属性でも付与 -->
         <div id="player" disablePictureInPicture></div>
     </div>
 
@@ -109,11 +113,15 @@
             startBtn.addEventListener('click', startTour);
         }, 3000);
 
-        document.addEventListener('enterpictureinpicture', (event) => {
+        // Chromebook等のシステムレベルPiPへの対抗策
+        const handlePiP = async () => {
             if (document.pictureInPictureElement) {
-                document.exitPictureInPicture().catch(() => {});
+                await document.exitPictureInPicture();
+                // PiPされたら無理やり動画を止めて次へ行くくらいの強気設定
+                nextDestination();
             }
-        }, true);
+        };
+        document.addEventListener('enterpictureinpicture', handlePiP, true);
     });
 
     function onYouTubeIframeAPIReady() {
@@ -130,6 +138,7 @@
 
     function onPlayerStateChange(event) {
         if (event.data === YT.PlayerState.PLAYING) {
+            // 広告検知（2026年最新仕様）
             const isAd = player.getAdState && player.getAdState() === 1;
             if (isAd) {
                 nextDestination();
@@ -140,7 +149,6 @@
             player.setVolume(50);
             updateInfoText();
 
-            // 前回のタイムアウトがあればクリア
             if (curtainTimeout) clearTimeout(curtainTimeout);
             
             curtainTimeout = setTimeout(() => {
@@ -150,6 +158,7 @@
                 startBar(); 
             }, 5000);
         }
+        // ユーザーによる一時停止はさせない
         if (isTourStarted && event.data === YT.PlayerState.PAUSED) {
             player.playVideo();
         }
@@ -188,11 +197,10 @@
 
     function startBar() {
         const bar = document.getElementById('progress-bar');
-        // 一旦リセットを強調
         bar.style.transition = 'none';
         bar.style.transform = 'scaleX(1)';
         
-        // 再描画を促すために微小な遅延を挟んで実行
+        // 2段階の待機で確実にアニメーションをリセット
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 bar.style.transition = 'transform 60s linear';

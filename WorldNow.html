@@ -1,65 +1,85 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>World Tour Simple</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
-        /* iframe自体がクリックイベントを受け取るように、pointer-eventsは設定しない */
-        iframe { border: none; width: 100%; height: 100%; } 
+        #player-container { position: relative; width: 100%; height: 100%; }
+        #player { width: 100%; height: 100%; }
         
+        /* 透明なガードレイヤー：クリックやタップをすべて無効化する */
+        #guard {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5; background: rgba(0,0,0,0); /* 完全透明 */
+        }
+
+        /* スタート画面 */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 10; color: white;
-            /* overlay全体ではなく、ボタンだけがクリック可能 */
-            cursor: default; 
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
+            z-index: 10; color: white; cursor: pointer;
         }
-        
-        #main-title { font-size: 36px; margin-bottom: 50px; text-align: center; }
-
-        #start-btn {
-            padding: 20px 40px; font-size: 20px;
-            border: 2px solid white; 
-            background: none; 
-            color: white; 
-            cursor: pointer; /* ボタン上に乗った時だけポインターを表示 */
-        }
+        #start-btn { padding: 20px 40px; font-size: 20px; border: 2px solid white; background: none; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="overlay">
-        <div id="main-title">World Tour</div>
-        <!-- ボタン単体にonclickイベントを設定 -->
-        <button id="start-btn" onclick="startTour()">世界へ旅に出る（音あり）</button>
+    <div id="overlay" onclick="startTour()">
+        <button id="start-btn">世界へ旅に出る（音あり）</button>
     </div>
 
-    <div id="container" style="width:100%; height:100%;"></div>
+    <div id="player-container">
+        <!-- 動画の上のガード -->
+        <div id="guard"></div>
+        <div id="player"></div>
+    </div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-    const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'v6Nf0Wf8S_0', '5_XidpxV960']; 
+    // ライブカメラIDリスト
+    const videoList = ['DhB2NS6i4uA', 'OuCbntsMsWY', 'h_m-m4vW9Xk', 'v6Nf0Wf8S_0']; 
     let currentIndex = 0;
-    const isMuted = 0; // 音あり固定 (mute=0)
+    let player;
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            height: '100%',
+            width: '100%',
+            videoId: videoList[currentIndex],
+            playerVars: { 
+                'autoplay': 0,
+                'controls': 0,    // コントロール非表示
+                'disablekb': 1,  // キーボード操作無効
+                'rel': 0,         // 関連動画非表示
+                'iv_load_policy': 3, // アノテーション非表示
+                'modestbranding': 1  // YouTubeロゴを最小限に
+            },
+            events: {
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    // もし何らかの理由で停止されたら強制再生する
+    function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.PAUSED) {
+            player.playVideo();
+        }
+    }
 
     function startTour() {
-        // ここにブレークポイントを設定するか、console.logを入れて実行されているか確認できます
-        console.log("startTour executed"); 
         document.getElementById('overlay').style.display = 'none';
-        loadVideo();
-        setInterval(next, 60000);
+        player.unMute();
+        player.setVolume(50);
+        player.playVideo();
+
+        setInterval(nextDestination, 60000); 
     }
 
-    function next() {
+    function nextDestination() {
         currentIndex = (currentIndex + 1) % videoList.length;
-        loadVideo();
-    }
-
-    function loadVideo() {
-        const videoId = videoList[currentIndex];
-        const url = `https://www.youtube.com{videoId}?autoplay=1&mute=${isMuted}&controls=0&modestanding=1&rel=0`;
-        const container = document.getElementById('container');
-        container.innerHTML = `<iframe src="${url}" allow="autoplay; encrypted-media"></iframe>`;
+        player.loadVideoById(videoList[currentIndex]);
+        player.unMute();
     }
 </script>
 </body>

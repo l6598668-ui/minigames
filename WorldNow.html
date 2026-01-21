@@ -1,99 +1,41 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        #ui-layer { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            background: rgba(0, 0, 0, 0.9);
-            color: #fff;
-        }
-        .action-btn { 
-            margin: 10px; padding: 15px 30px; border: none; border-radius: 5px; 
-            font-size: 16px; cursor: pointer;
-            /* 初期状態では無効 */
-            background: #555; 
-            color: #ccc;
-        }
-        .action-btn.enabled { 
-             /* 準備完了後に有効化 */
-            background: #ff0000; 
-            color: #fff;
-        }
-        .action-btn.enabled:hover { background: #e60000; }
-    </style>
+    <!-- スタイルなどは省略 -->
 </head>
 <body>
 
     <div id="player"></div>
 
-    <!-- 音量選択UI -->
-    <div id="ui-layer">
-        <h2 id="status-text">YouTubeプレイヤーを読み込み中...</h2>
-        <button id="btn-sound-on" class="action-btn" onclick="startTour(false)" disabled>🎧 音ありで楽しむ</button>
-        <button id="btn-sound-off" class="action-btn" onclick="startTour(true)" disabled>🔇 音なしで楽しむ</button>
-    </div>
-
 <script src="https://www.youtube.com"></script>
 <script>
-    const videoList = ['OuCbntsMsWY', 'DhB2NS6i4uA', '5_XSYlAfJZM']; 
+    const videoList = ['OuCbntsMsWY', 'ID2', 'ID3']; // ここにライブIDをリストアップ
     let currentIndex = 0;
     let player;
-    let isMutedGlobal = false;
 
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
-            height: '100%',
-            width: '100%',
             videoId: videoList[currentIndex],
             playerVars: { 
-                'autoplay': 0, 'controls': 0, 'rel': 0, 
-                'mute': 1, 'playsinline': 1, 'enablejsapi': 1, 'origin': window.location.origin
+                'autoplay': 1, 
+                'mute': 1,     // ★音なし
+                'controls': 0, 
+                'origin': window.location.origin
             },
             events: {
-                'onReady': onPlayerReady // 準備完了イベントを設定
+                'onReady': onPlayerReady
             }
         });
     }
 
-    // プレイヤーの準備ができたら実行される関数
     function onPlayerReady(event) {
-        document.getElementById('status-text').innerText = "世界旅行へ出発！音量を選んでください";
-        // ボタンを有効化し、スタイルを適用
-        document.getElementById('btn-sound-on').disabled = false;
-        document.getElementById('btn-sound-off').disabled = false;
-        document.getElementById('btn-sound-on').classList.add('enabled');
-        document.getElementById('btn-sound-off').classList.add('enabled');
-    }
-
-    // ユーザーがボタンを押した時の開始関数（TypeErrorを回避）
-    function startTour(muteStatus) {
-        // playerが確実に存在するので、ここでTypeErrorは起きない
-        document.getElementById('ui-layer').style.display = 'none';
-        isMutedGlobal = muteStatus;
-
-        if (muteStatus) {
-            player.mute();
-        } else {
-            player.unMute(); 
-        }
-
-        player.playVideo();
-        setInterval(nextDestination, 60000);
+        event.target.playVideo();
+        setInterval(nextDestination, 60000); 
     }
 
     function nextDestination() {
         currentIndex = (currentIndex + 1) % videoList.length;
         player.loadVideoById(videoList[currentIndex]); 
-
-        if (isMutedGlobal) {
-            player.mute();
-        } else {
-            player.unMute(); 
-        }
     }
 </script>
 </body>

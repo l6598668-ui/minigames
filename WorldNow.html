@@ -4,35 +4,38 @@
     <meta charset="UTF-8">
     <title>World Tour Webcam</title>
     <style>
+        /* 全体の背景を黒にし、画面いっぱいに広げる */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
+        /* YouTubeプレイヤーのコンテナ */
         #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        /* スタート画面のスタイル (白背景・黒文字) */
+        /* スタート画面のスタイル (ダーク背景・白文字) */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95); /* 白背景 */
-            display: flex; justify-content: center; align-items: center;
-            z-index: 10; color: black; /* テキスト色を黒に */
-            cursor: pointer;
+            background: rgba(0,0,0,0.9); /* 半透明の黒背景 */
+            display: flex; flex-direction: column; /* 縦並び */
+            justify-content: center; align-items: center;
+            z-index: 10; color: white; /* テキスト色を白に */
         }
-        /* ボタンのスタイル (白背景・黒文字) */
+        
+        /* ボタンのスタイル (黒塗りつぶし・白文字) */
         #start-btn {
             padding: 20px 40px; font-size: 20px;
-            border: 2px solid black; /* 黒い枠線 */
-            background: white; /* 白い背景 */
-            color: black; /* 黒い文字 */
+            border: none; /* 枠線なし */
+            background: black; /* 黒い背景 */
+            color: white; /* 白い文字 */
             cursor: pointer;
             transition: background 0.3s;
         }
         #start-btn:hover {
-            background: #f0f0f0; /* ホバーで少しグレーに */
+            background: #333; /* ホバーで少し薄い黒に */
         }
     </style>
 </head>
 <body>
 
-    <!-- ここをクリックするとstartTourが呼ばれる -->
     <div id="overlay" onclick="startTour()">
+        <h1 style="margin-bottom: 30px;">World Tour</h1> <!-- World Tourのタイトル -->
         <button id="start-btn">世界へ旅に出る</button>
     </div>
     <div id="player"></div>
@@ -51,26 +54,22 @@
             playerVars: { 
                 'autoplay': 0, 
                 'controls': 0, 
-                'mute': 0,     // 音あり設定（ブラウザ制限のため最初は無音）
+                'mute': 0,     
                 'playsinline': 1,
-                'origin': window.location.origin // CORS/CORB対策
+                'origin': window.location.origin
             }
         });
     }
 
     function startTour() {
-        // 安全策：playerが未定義でないことを確認
         if (!player || typeof player.playVideo !== 'function') return;
 
-        // オーバーレイを消す
         document.getElementById('overlay').style.display = 'none';
         
-        // ユーザーの操作直後に再生を開始することで、音が出るようになる
         player.unMute();
         player.setVolume(50);
         player.playVideo();
 
-        // 60秒（1分）ごとに次の動画に切り替え
         setInterval(nextDestination, 60000); 
     }
 
@@ -79,8 +78,7 @@
 
         currentIndex = (currentIndex + 1) % videoList.length;
         player.loadVideoById(videoList[currentIndex]);
-        // 切り替え時もミュートを解除する（念のため）
-        // loadVideoByIdの後に設定が確実に適用されるよう、少し遅延させるのが安定します
+        
         setTimeout(() => {
              player.unMute();
              player.setVolume(50);

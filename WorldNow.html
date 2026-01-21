@@ -16,14 +16,15 @@
         #curtain {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 6; display: none;
-            justify-content: center; align-items: center; /* 追加 */
-            color: white; /* 追加 */
-            font-size: 24px; /* 追加 */
         }
 
+        /* スタート画面：初期状態を display: none; にして非表示にする */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; justify-content: center; align-items: center;
+            background: #000; 
+            display: none; /* ここを変更して初期非表示 */
+            justify-content: center; 
+            align-items: center;
             z-index: 10; color: white; cursor: pointer;
         }
         #start-btn { padding: 20px 40px; font-size: 20px; border: 2px solid white; background: none; color: white; cursor: pointer; }
@@ -32,12 +33,11 @@
 <body>
 
     <div id="overlay" onclick="startTour()">
-        <!-- 初期テキストを「読み込み中...」に変更 -->
-        <button id="start-btn">読み込み中...</button>
+        <button id="start-btn">世界へ旅に出る（音あり）</button>
     </div>
 
     <div id="player-container">
-        <div id="curtain">読み込み中...</div> <!-- テキスト追加 -->
+        <div id="curtain"></div>
         <div id="guard"></div>
         <div id="player"></div>
     </div>
@@ -48,7 +48,13 @@
     let currentIndex = 0;
     let player;
     let isTourStarted = false;
-    let isPlayerReady = false; // ★追加：プレーヤー準備完了フラグ
+
+    // ★追加：ページ読み込み完了後、3秒後にボタンを表示する
+    document.addEventListener('DOMContentLoaded', (event) => {
+        setTimeout(() => {
+            document.getElementById('overlay').style.display = 'flex';
+        }, 3000);
+    });
 
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
@@ -56,56 +62,53 @@
             width: '100%',
             videoId: videoList[currentIndex],
             playerVars: { 
-                'autoplay': 0, 'controls': 0, 'disablekb': 1, 'rel': 0, 
-                'iv_load_policy': 3, 'modestbranding': 1, 'mute': 1 
+                'autoplay': 0,
+                'controls': 0,
+                'disablekb': 1,
+                'rel': 0,
+                'iv_load_policy': 3,
+                'modestbranding': 1,
+                'mute': 1 // 最初はミュートで読み込む（再生エラー防止）
             },
             events: {
-                'onReady': () => { // ★追加：YouTubeプレーヤー準備完了を検知
-                    isPlayerReady = true; 
-                },
                 'onStateChange': onPlayerStateChange
             }
         });
-        
-        // ★追加：3秒後にボタンのテキストを変更（ボタンの表示だけの変更）
-        setTimeout(() => {
-            document.getElementById('start-btn').innerText = "世界へ旅に出る（音あり）";
-        }, 3000);
     }
 
     function onPlayerStateChange(event) {
+        // 再生が始まったら音を出して、カーテンを開ける準備をする
         if (event.data === YT.PlayerState.PLAYING) {
             player.unMute();
             player.setVolume(50);
             
+            // 5秒後にカーテンを消す（タイトルが消えるのを待つ）
             setTimeout(() => {
                 document.getElementById('curtain').style.display = 'none';
             }, 5000);
         }
 
+        // 強制停止防止
         if (isTourStarted && event.data === YT.PlayerState.PAUSED) {
             player.playVideo();
         }
     }
 
     function startTour() {
-        // ★修正：isPlayerReadyがtrue（プレーヤーが準備完了）でないと実行しない（安全装置）
-        if (!isPlayerReady) {
-            alert("まだ動画の準備中です。数秒お待ちください。");
-            return; 
-        }
-
         isTourStarted = true;
         document.getElementById('overlay').style.display = 'none';
-        document.getElementById('curtain').style.display = 'flex'; // 追加
+        document.getElementById('curtain').style.display = 'block';
         
-        player.playVideo();
+        player.playVideo(); // 再生開始（onStateChangeでアンミュートされる）
         setInterval(nextDestination, 60000); 
     }
 
     function nextDestination() {
-        document.getElementById('curtain').style.display = 'flex'; // 追加
+        document.getElementById('curtain').style.display = 'block';
+        
         currentIndex = (currentIndex + 1) % videoList.length;
+        
+        // 再生を確実にするため、一旦ミュートでロードする
         player.mute();
         player.loadVideoById(videoList[currentIndex]);
         player.playVideo();
@@ -113,4 +116,3 @@
 </script>
 </body>
 </html>
-

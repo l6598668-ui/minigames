@@ -1,45 +1,116 @@
-<div id="video-area" style="position:relative; width:560px; height:315px; background:#000;">
-  <!-- YouTubeプレイヤー -->
-  <div id="player"></div>
-  
-  <!-- 重なるボタン -->
-  <div id="play-mask" onclick="startVideo()" style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.7); cursor:pointer; z-index:100;">
-    <div style="padding:15px 30px; background:#f00; color:#fff; font-weight:bold; border-radius:10px; font-size:20px;">
-      動画を再生する
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Player</title>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #111; }
+        
+        /* 動画コンテナの設定 */
+        .video-wrapper {
+            position: relative;
+            width: 560px;
+            height: 315px;
+            background: #000;
+        }
+
+        /* 再生中、クリックで停止されないようにガードする */
+        #player {
+            pointer-events: none;
+        }
+
+        /* ボタン（オーバーレイ）のデザイン */
+        #custom-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            cursor: pointer;
+            z-index: 9999;
+            transition: opacity 0.3s;
+        }
+
+        .play-btn {
+            padding: 20px 40px;
+            background: #ff0000;
+            color: #ffffff;
+            font-weight: bold;
+            border-radius: 50px;
+            font-size: 20px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+<div class="video-wrapper">
+    <!-- YouTubeプレイヤーが表示される場所 -->
+    <div id="player"></div>
+    
+    <!-- クリックしたら消えて再生を開始するボタン -->
+    <div id="custom-overlay" onclick="forceStartVideo()">
+        <button class="play-btn">動画を再生する</button>
     </div>
-  </div>
 </div>
 
-<script src="https://www.youtube.com/embed/OuCbntsMsWY?si=07McOiyJUwJfMQod"></script>
 <script>
-  var player;
-  function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-      height: '315',
-      width: '560',
-      videoId: 'OuCbntsMsWY',
-      playerVars: {
-        'autoplay': 0,
-        'controls': 0,
-        'playsinline': 1,
-        'rel': 0
-      }
-    });
-  }
+    // 1. YouTube IFrame API を読み込む
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/embed/OuCbntsMsWY?si=07McOiyJUwJfMQod";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-  function startVideo() {
-    if (player && typeof player.playVideo === 'function') {
-      player.unMute(); // 音を出す
-      player.playVideo(); // 再生
-      // ボタンがあるマスクを完全に消す
-      document.getElementById('play-mask').style.display = 'none';
-    } else {
-      console.log("まだ読み込み中です。もう一度押してください。");
+    var player;
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            height: '315',
+            width: '560',
+            videoId: 'OuCbntsMsWY', // 動画ID
+            playerVars: {
+                'autoplay': 0,
+                'controls': 0,    // 一時停止バーなどを隠す
+                'rel': 0,         // 関連動画を隠す
+                'playsinline': 1, // スマホで全画面にならないようにする
+                'enablejsapi': 1
+            },
+            events: {
+                'onReady': onPlayerReady
+            }
+        });
     }
-  }
+
+    function onPlayerReady(event) {
+        console.log("Player Ready");
+    }
+
+    // 2. ボタンが押された時の処理
+    function forceStartVideo() {
+        // ボタンエリアをすぐに消す
+        var overlay = document.getElementById('custom-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+
+        // 動画を音ありで再生
+        if (player && typeof player.playVideo === 'function') {
+            player.unMute();
+            player.playVideo();
+        } else {
+            // 万が一準備ができていなくても、1秒以内に強制リトライ
+            setTimeout(function() {
+                if (player) {
+                    player.unMute();
+                    player.playVideo();
+                }
+            }, 500);
+        }
+    }
 </script>
 
-<style>
-  /* 再生開始後、動画をクリックしても止まらないようにする */
-  #player { pointer-events: none; }
-</style>
+</body>
+</html>

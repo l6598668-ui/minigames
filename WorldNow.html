@@ -4,49 +4,117 @@
     <meta charset="UTF-8">
     <title>世界一周 窓の旅</title>
     <style>
-        body { background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; }
-        /* 飛行機の窓枠のデザイン */
-        .window-frame {
-            position: relative; width: 300px; height: 450px; background-color: #000;
-            border: 15px solid #dcdcdc; border-radius: 100px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,1);
-            overflow: hidden; z-index: 1;
+        /* 機内の壁のような背景 */
+        body { 
+            background: #e6e9ed; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            font-family: 'Helvetica Neue', sans-serif; 
         }
-        /* 映像エリア：YouTubeのロゴを隠すために拡大 */
-        #player { position: absolute; top: -10%; left: -50%; width: 200%; height: 120%; pointer-events: none; }
-        
-        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: black; opacity: 1; transition: opacity 1.5s; z-index: 10; }
-        .info { position: absolute; top: 30px; width: 100%; text-align: center; color: white; text-shadow: 0 2px 4px #000; z-index: 20; font-size: 14px; }
-        .bar-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.2); z-index: 20; }
-        #bar { width: 0%; height: 100%; background: #fff; }
 
-        /* スタート画面：最初からボタンを出す */
-        #start-screen { position: fixed; inset: 0; background: #111; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-        button { background: white; color: black; border: none; padding: 15px 40px; margin: 10px; border-radius: 30px; cursor: pointer; font-size: 18px; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #ddd; }
+        /* 飛行機の窓：サイズを大きくし、枠をよりリアルに */
+        .window {
+            position: relative; 
+            width: 400px;  /* 横幅を拡大 */
+            height: 600px; /* 縦幅を拡大 */
+            background: #000;
+            border: 25px solid #fdfdfd; /* 厚みのある白い窓枠 */
+            border-radius: 150px; /* 飛行機特有の丸み */
+            overflow: hidden; 
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.4), /* 外側の影 */
+                inset 0 0 30px rgba(0,0,0,1); /* 内側の深い影 */
+            z-index: 1;
+        }
+
+        /* 動画コンテナ：YouTubeのロゴを隠すためにさらに大きく配置 */
+        .video-container { 
+            position: absolute; 
+            top: 0; 
+            left: -50%; 
+            width: 200%; 
+            height: 100%; 
+        }
+
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            pointer-events: none; /* 操作パネルを触らせない */
+        }
+
+        /* 情報パネル：読みやすさを向上 */
+        .info { 
+            position: absolute; 
+            top: 50px; 
+            width: 100%; 
+            text-align: center; 
+            color: white; 
+            z-index: 10; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8); 
+        }
+        #loc { font-size: 20px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; }
+        #time { font-size: 14px; opacity: 0.8; }
+
+        /* タイマーバー：窓の下に細い線 */
+        .timer-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background: rgba(255,255,255,0.5);
+            width: 0%;
+            z-index: 20;
+            transition: width 1s linear;
+        }
+
+        /* スタート画面 */
+        #start-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: #1a1a1a; 
+            color: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 100; 
+        }
+        h2 { margin-bottom: 30px; letter-spacing: 3px; }
+        button { 
+            padding: 18px 50px; 
+            border-radius: 40px; 
+            border: none; 
+            font-size: 20px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            background: white;
+            color: black;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
 
     <div id="start-screen">
-        <h2>世界一周 窓の旅</h2>
-        <p>音を出して出発しますか？</p>
-        <button onclick="initAndStart(true)">音ありで出発</button>
-        <button onclick="initAndStart(false)">静かに出発</button>
+        <h2>WORLD WINDOW</h2>
+        <button onclick="startApp()">搭乗する</button>
     </div>
 
-    <div class="window-frame">
-        <div id="overlay"></div>
+    <div class="window">
         <div class="info">
-            <div id="loc">READY</div>
+            <div id="loc">LOADING...</div>
             <div id="time"></div>
         </div>
-        <div id="player"></div>
-        <div class="bar-bg"><div id="bar"></div></div>
+        <div class="video-container" id="player-box"></div>
+        <div class="timer-bar" id="bar"></div>
     </div>
 
     <script>
-        // あなたが送ってくれたURLのリスト
         const videos = [
             { id: 'rnXIjl_Rzy4', name: 'Shibuya, Tokyo' },
             { id: 'xXZqU5vnEug', name: 'Namibia, Africa' },
@@ -56,94 +124,46 @@
             { id: 'zNahac5x0Tw', name: 'Miami Beach, USA' }
         ];
 
-        let player;
-        let isMuted = true;
         let currentIndex = 0;
-        let apiLoaded = false;
+        let timer;
 
-        // YouTube APIの読み込み
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com";
-        document.body.appendChild(tag);
-
-        function onYouTubeIframeAPIReady() {
-            apiLoaded = true;
-        }
-
-        // ボタンを押したときに実行される
-        function initAndStart(sound) {
-            isMuted = !sound;
+        function startApp() {
             document.getElementById('start-screen').style.display = 'none';
-
-            // APIの準備ができるまで一瞬待ってから作成
-            const checkAPI = setInterval(() => {
-                if (apiLoaded) {
-                    clearInterval(checkAPI);
-                    createPlayer();
-                }
-            }, 100);
+            playNext();
         }
 
-        function createPlayer() {
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                videoId: videos[0].id,
-                playerVars: { 
-                    'autoplay': 1, 
-                    'controls': 0, 
-                    'rel': 0, 
-                    'modestbranding': 1,
-                    'mute': isMuted ? 1 : 0
-                },
-                events: {
-                    'onReady': playVideo,
-                    'onStateChange': (e) => {
-                        // 動画が止まったら次へ
-                        if (e.data === YT.PlayerState.ENDED) {
-                            nextVideo();
-                        }
-                    }
-                }
-            });
-        }
-
-        function playVideo() {
+        function playNext() {
             const v = videos[currentIndex];
-            const overlay = document.getElementById('overlay');
-            overlay.style.opacity = 1;
-
-            setTimeout(() => {
-                player.loadVideoById(v.id);
-                if (isMuted) player.mute(); else player.unMute();
-                document.getElementById('loc').innerText = v.name;
-                
-                setTimeout(() => {
-                    overlay.style.opacity = 0;
-                    startTimer();
-                }, 2000);
-            }, 1000);
-        }
-
-        function nextVideo() {
-            currentIndex = (currentIndex + 1) % videos.length;
-            playVideo();
-        }
-
-        function startTimer() {
-            let count = 0;
+            document.getElementById('loc').innerText = v.name;
+            
+            // プログレスバーのリセット
             const bar = document.getElementById('bar');
-            const interval = setInterval(() => {
-                count++;
-                bar.style.width = (count / 60 * 100) + '%';
-                if (count >= 60) {
-                    clearInterval(interval);
-                    nextVideo();
-                }
-            }, 1000);
+            bar.style.transition = 'none';
+            bar.style.width = '0%';
+            
+            // 動画の入れ替え
+            const playerBox = document.getElementById('player-box');
+            playerBox.innerHTML = `
+                <iframe
+                    src="https://www.youtube.com{v.id}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen>
+                </iframe>`;
+
+            // バーのアニメーション開始（少し遅らせて実行）
+            setTimeout(() => {
+                bar.style.transition = 'width 60s linear';
+                bar.style.width = '100%';
+            }, 100);
+
+            currentIndex = (currentIndex + 1) % videos.length;
+
+            // 1分後に次の動画へ
+            clearTimeout(timer);
+            timer = setTimeout(playNext, 60000);
         }
 
-        // 現在時刻の更新
+        // 時刻表示を更新
         setInterval(() => {
             const now = new Date();
             document.getElementById('time').innerText = now.toLocaleTimeString();

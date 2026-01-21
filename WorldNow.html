@@ -6,3 +6,11 @@
   style="pointer-events: none;"
   allowfullscreen>
 </iframe>
+<script>
+  // ページ読み込み完了時に実行
+  window.onload = function() {
+    var iframe = document.querySelector('iframe');
+    // ブラウザのブロックを回避するため、一度読み込み直させる
+    iframe.src = iframe.src; 
+  };
+</script>

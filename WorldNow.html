@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="data:,">
-    <title>World Now - 2026 Edition</title>
+    <title>World Now</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
         #player-container { position: relative; width: 100%; height: 100%; }
-        #player { width: 100%; height: 100%; }
+        #player-wrapper { width: 100%; height: 100%; } /* プレイヤーを生成する場所 */
         #guard { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; background: rgba(0,0,0,0); }
         #curtain { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; }
         #info-display { position: absolute; bottom: 40px; left: 40px; z-index: 7; color: white; text-shadow: 2px 2px 8px rgba(0,0,0,1); pointer-events: none; font-weight: bold; display: none; }
         #info-country { font-size: 32px; margin-bottom: 5px; }
         #info-time { font-size: 24px; opacity: 0.9; }
         #progress-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); z-index: 8; display: none; }
-        /* transform-origin: right にすることで、左側から短くなる（右へ消える） */
+        /* transform-origin: right で右側を固定し、左側から消えていく */
         #progress-bar { height: 100%; width: 100%; background: #ffffff; transform-origin: right; transform: scaleX(1); }
         .loader { border: 5px solid #333; border-top: 5px solid #fff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 20; color: white; }
-        #start-btn { padding: 20px 40px; font-size: 20px; border: 2px solid white; background: none; color: white; cursor: wait; opacity: 0.5; transition: 0.3s; }
-        #start-btn.enabled { cursor: pointer; opacity: 1.0; }
-        #start-btn.enabled:hover { background: white; color: black; }
+        #start-btn { padding: 20px 40px; font-size: 20px; border: 2px solid white; background: none; color: white; cursor: pointer; transition: 0.3s; }
+        #start-btn:hover { background: white; color: black; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -41,7 +40,9 @@
             <div style="font-size: 24px; letter-spacing: 2px;">読み込み中...</div>
         </div>
         <div id="guard"></div>
-        <div id="player"></div>
+        <div id="player-wrapper">
+            <div id="player"></div>
+        </div>
     </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -61,117 +62,99 @@
         { id: '-ToX_1jSCsE', name: '日本 - 山梨 - 富士ヶ嶺ゴルフ場', tz: 'Asia/Tokyo' }
     ];
 
-    let player, currentVideo = null, isTourStarted = false;
-    let nextDestinationTimer = null, curtainTimeout = null, adCheckInterval = null;
-    const DISPLAY_DELAY = 5000; 
+    let player, currentVideo = null;
+    let nextDestinationTimer = null, curtainTimeout = null;
     const STAY_DURATION = 60000; 
 
+    // 初回ボタン
+    document.getElementById('start-btn').addEventListener('click', () => {
+        document.getElementById('overlay').style.display = 'none';
+        initNewPlayer();
+        setInterval(updateTimeOnly, 1000);
+    });
+
     function onYouTubeIframeAPIReady() {
-        currentVideo = videoList[Math.floor(Math.random() * videoList.length)];
+        // API準備完了（プレイヤー作成はボタン押下後）
+    }
+
+    // ★重要：プレイヤーを毎回作り直す関数
+    function initNewPlayer() {
+        // 既存プレイヤーを破棄
+        if (player) {
+            player.destroy();
+        }
+        // HTML要素をリセット
+        document.getElementById('player-wrapper').innerHTML = '<div id="player"></div>';
+        
+        // 動画を選定
+        let nextVideo;
+        do { 
+            nextVideo = videoList[Math.floor(Math.random() * videoList.length)]; 
+        } while (currentVideo && nextVideo.id === currentVideo.id);
+        currentVideo = nextVideo;
+
+        // 新規作成（常に1回目の再生を装う）
         player = new YT.Player('player', {
             height: '100%', width: '100%', videoId: currentVideo.id,
             playerVars: { 
-                'autoplay': 0, 'controls': 0, 'disablekb': 1, 'rel': 0, 
-                'iv_load_policy': 3, 'modestbranding': 1, 'mute': 1
+                'autoplay': 1, 'controls': 0, 'disablekb': 1, 'rel': 0, 
+                'iv_load_policy': 3, 'modestbranding': 1, 'mute': 0 
             },
-            events: { 'onStateChange': onPlayerStateChange }
+            events: { 
+                'onReady': (e) => { e.target.playVideo(); },
+                'onStateChange': onPlayerStateChange 
+            }
         });
-        
-        const startBtn = document.getElementById('start-btn');
-        setTimeout(() => {
-            startBtn.classList.add('enabled');
-            startBtn.addEventListener('click', startTour);
-        }, 1500);
-    }
-
-    // 2026年最新：より厳格な広告・エラー検知
-    function checkAndSkipAd() {
-        if (!player || !player.getVideoData) return;
-        
-        const data = player.getVideoData();
-        const adState = player.getAdState ? player.getAdState() : 0;
-        
-        // 広告状態(1)、またはgetVideoDataに広告フラグがある場合、またはタイトルが「広告」関連の場合
-        if (adState === 1 || (data && data.ad === 1) || (data && data.title && data.title.includes("Ad"))) {
-            console.warn("広告を検知：スキップします");
-            nextDestination();
-            return true;
-        }
-        return false;
     }
 
     function onPlayerStateChange(event) {
+        // 広告検知（もし出た場合は即座に破壊して次へ）
         if (event.data === YT.PlayerState.PLAYING) {
-            // 再生開始直後に広告チェック
-            if (checkAndSkipAd()) return;
+            const isAd = (player.getAdState && player.getAdState() === 1);
+            if (isAd) {
+                initNewPlayer();
+                return;
+            }
 
-            player.unMute();
-            player.setVolume(50);
+            // 正常再生
+            document.getElementById('curtain').style.display = 'none';
             updateInfoText();
-
-            // 5秒間の「読み込み中」表示の後にメイン表示
+            
+            // 5秒後に情報とバーを表示
             if (curtainTimeout) clearTimeout(curtainTimeout);
             curtainTimeout = setTimeout(() => {
-                document.getElementById('curtain').style.display = 'none';
                 document.getElementById('info-display').style.display = 'block';
                 document.getElementById('progress-container').style.display = 'block';
                 startBar(); 
-            }, DISPLAY_DELAY);
-
-            // 再生中も定期的に広告が割り込んでいないか監視（特に長い動画用）
-            if (adCheckInterval) clearInterval(adCheckInterval);
-            adCheckInterval = setInterval(checkAndSkipAd, 2000);
+            }, 5000);
         }
-
-        if (event.data === YT.PlayerState.BUFFERING) {
-            // バッファリング（読み込み）に入った時も広告の可能性があるためチェック
-            setTimeout(checkAndSkipAd, 500);
-        }
-    }
-
-    function startTour() {
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('curtain').style.display = 'flex';
-        player.playVideo();
-        setInterval(updateTimeOnly, 1000);
     }
 
     function nextDestination() {
         clearTimeout(nextDestinationTimer);
         if (curtainTimeout) clearTimeout(curtainTimeout);
-        if (adCheckInterval) clearInterval(adCheckInterval);
         
         document.getElementById('curtain').style.display = 'flex';
         document.getElementById('info-display').style.display = 'none';
         document.getElementById('progress-container').style.display = 'none';
         
-        // バーを即座に満タンに戻す
+        // バーをリセット
         const bar = document.getElementById('progress-bar');
         bar.style.transition = 'none';
         bar.style.transform = 'scaleX(1)';
 
-        let nextVideo;
-        do { 
-            nextVideo = videoList[Math.floor(Math.random() * videoList.length)]; 
-        } while (nextVideo.id === currentVideo.id);
-        
-        currentVideo = nextVideo;
-        player.mute();
-        player.loadVideoById(currentVideo.id);
+        // 次のプレイヤー作成へ
+        initNewPlayer();
     }
 
     function startBar() {
         const bar = document.getElementById('progress-bar');
-        clearTimeout(nextDestinationTimer);
-
-        // 一旦リセット
         bar.style.transition = 'none';
         bar.style.transform = 'scaleX(1)';
         
-        // ブラウザの描画タイミングに合わせてアニメーション開始
         requestAnimationFrame(() => {
             setTimeout(() => {
-                // 1分かけて scaleX を 1 から 0 へ（右を支点に左から消える）
+                // 左から右へ消える（右側固定でスケールを0にする）
                 bar.style.transition = `transform ${STAY_DURATION}ms linear`;
                 bar.style.transform = 'scaleX(0)';
                 
@@ -186,17 +169,13 @@
     }
 
     function updateTimeOnly() {
-        if (!currentVideo || !player) return;
+        if (!currentVideo) return;
         const now = new Date();
-        try {
-            const timeStr = now.toLocaleTimeString('ja-JP', { 
-                timeZone: currentVideo.tz, 
-                hour: '2-digit', minute: '2-digit', second: '2-digit' 
-            });
-            document.getElementById('info-time').innerText = timeStr;
-        } catch (e) {
-            document.getElementById('info-time').innerText = "--:--:--";
-        }
+        const timeStr = now.toLocaleTimeString('ja-JP', { 
+            timeZone: currentVideo.tz, 
+            hour: '2-digit', minute: '2-digit', second: '2-digit' 
+        });
+        document.getElementById('info-time').innerText = timeStr;
     }
 </script>
 </body>

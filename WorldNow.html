@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
-    <title>World Now</title>
+    <title>World Now - 2026</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; color: #000; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; }
         #player-container { position: relative; width: 100%; height: 100%; }
         #player-wrapper { width: 100%; height: 100%; pointer-events: none; }
         
@@ -20,7 +20,7 @@
         #curtain { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: #fff; z-index: 10; display: none; flex-direction: column; 
-            justify-content: center; align-items: center; text-align: center; 
+            justify-content: center; align-items: center; text-align: center; color: #000;
         }
 
         #flight-route { 
@@ -30,7 +30,7 @@
         }
 
         .city-info { text-align: center; width: 45%; }
-        .city-name { font-size: 26px; font-weight: bold; margin-bottom: 10px; color: #333; }
+        .city-name { font-size: 32px; font-weight: bold; margin-bottom: 10px; color: #333; line-height: 1.2; }
         .city-label { font-size: 13px; text-transform: uppercase; color: #999; letter-spacing: 2px; margin-bottom: 5px; }
         .city-time { font-size: 20px; font-family: monospace; color: #666; }
         
@@ -81,36 +81,35 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
     const videoList = [
-        { id: 'OuCbntsMsWY', name: '日本 - 成田国際空港', tz: 'Asia/Tokyo', cityName: 'NARITA AIRPORT' },
-        { id: 'rnXIjl_Rzy4', name: 'アメリカ - ニューヨーク - タイムズスクエア', tz: 'America/New_York', cityName: 'NEW YORK' },
-        { id: 'KdXa0xp7jLs', name: 'アメリカ - ニューヨーク - 自由の女神像', tz: 'America/New_York', cityName: 'NEW YORK' },
-        { id: 'R__e74ULCXQ', name: 'アメリカ - ロサンゼルス - ラスベガス', tz: 'America/Los_Angeles', cityName: 'LAS VEGAS' },
-        { id: 'dfVK7ld38Ys', name: '日本 - 東京 - 渋谷スクランブル交差点', tz: 'Asia/Tokyo', cityName: 'SHIBUYA' },
-        { id: 'gdrNUUf-cQw', name: '南アフリカ - テンベ象公園', tz: 'Africa/Johannesburg', cityName: 'SOUTH AFRICA' },
-        { id: '6HYjCFkmDPA', name: '日本 - 沖縄 - 那覇市内', tz: 'Asia/Tokyo', cityName: 'NAHA' },
-        { id: 'pJC3BThpdio', name: '日本 - 鹿児島 - 鹿児島空港', tz: 'Asia/Tokyo', cityName: 'KAGOSHIMA AIRPORT' },
-        { id: 'ZdvNQ3D0PY4', name: '日本 - 沖縄 - 那覇空港', tz: 'Asia/Tokyo', cityName: 'NAHA AIRPORT' },
-        { id: 'zNahac5x0Tw', name: '日本 - 長崎 - 長崎空港', tz: 'Asia/Tokyo', cityName: 'NAGASAKI AIRPORT' },
-        { id: 'GXg2lP8tZOY', name: '日本 - 鹿児島 - 鹿児島市内', tz: 'Asia/Tokyo', cityName: 'KAGOSHIMA' },
-        { id: '-ToX_1jSCsE', name: '日本 - 山梨 - 富士ヶ嶺', tz: 'Asia/Tokyo', cityName: 'YAMANASHI' },
-        { id: 'STIN6kB4hCs', name: '日本 - 大阪 - 大阪国際空港(伊丹)', tz: 'Asia/Tokyo', cityName: 'OSAKA AIRPORT' },
-        { id: '1IB96p46tjE', name: '日本 - 大阪 - 道頓堀', tz: 'Asia/Tokyo', cityName: 'DOTONBORI' },
-        { id: '8ir0mYl8Fpo', name: '日本 - 奈良 - 金剛山', tz: 'Asia/Tokyo', cityName: 'MT.KONGO' },
-        { id: 'GLQhbRGv5qU', name: '日本 - 東京 - 新宿', tz: 'Asia/Tokyo', cityName: 'SHINJUKU' },
-        { id: 'gzb4qKHKGq8', name: '日本 - 東京 - 東京駅', tz: 'Asia/Tokyo', cityName: 'TOKYO STATION' },
-        { id: 'tUcK5gVHMdo', name: '日本 - 大阪 - 大阪国際空港(伊丹)', tz: 'Asia/Tokyo', cityName: 'OSAKA AIRPORT' },
-        { id: 'rGtE0C62fss', name: '日本 - 熊本 - 熊本空港', tz: 'Asia/Tokyo', cityName: 'KUMAMOTO AIRPORT' },
-        { id: 'h63Xam3xLcc', name: '日本 - 北海道 - 岩見沢市', tz: 'Asia/Tokyo', cityName: 'IWAMIZAWA' },
-        { id: '8RyR0J8zbbU', name: '日本 - 福岡 - JR博多駅', tz: 'Asia/Tokyo', cityName: 'HAKATA STATION' }
+        { id: 'OuCbntsMsWY', name: '日本 - 成田国際空港', tz: 'Asia/Tokyo', cityName: 'CHIBA' },
+        { id: 'rnXIjl_Rzy4', name: 'アメリカ - タイムズスクエア', tz: 'America/New_York', cityName: 'NEW YORK' },
+        { id: 'KdXa0xp7jLs', name: 'アメリカ - 自由の女神像', tz: 'America/New_York', cityName: 'NEW YORK' },
+        { id: 'R__e74ULCXQ', name: 'アメリカ - ラスベガス', tz: 'America/Los_Angeles', cityName: 'NEVADA' },
+        { id: 'dfVK7ld38Ys', name: '日本 - 渋谷', tz: 'Asia/Tokyo', cityName: 'TOKYO' },
+        { id: 'gdrNUUf-cQw', name: '南アフリカ - 象公園', tz: 'Africa/Johannesburg', cityName: 'SOUTH AFRICA' },
+        { id: '6HYjCFkmDPA', name: '日本 - 沖縄', tz: 'Asia/Tokyo', cityName: 'OKINAWA' },
+        { id: 'pJC3BThpdio', name: '日本 - 鹿児島空港', tz: 'Asia/Tokyo', cityName: 'KAGOSHIMA' },
+        { id: 'ZdvNQ3D0PY4', name: '日本 - 那覇空港', tz: 'Asia/Tokyo', cityName: 'OKINAWA' },
+        { id: 'zNahac5x0Tw', name: '日本 - 長崎空港', tz: 'Asia/Tokyo', cityName: 'NAGASAKI' },
+        { id: 'GXg2lP8tZOY', name: '日本 - 鹿児島市内', tz: 'Asia/Tokyo', cityName: 'KAGOSHIMA' },
+        { id: '-ToX_1jSCsE', name: '日本 - 山梨', tz: 'Asia/Tokyo', cityName: 'YAMANASHI' },
+        { id: 'STIN6kB4hCs', name: '日本 - 伊丹空港', tz: 'Asia/Tokyo', cityName: 'OSAKA' },
+        { id: '1IB96p46tjE', name: '日本 - 道頓堀', tz: 'Asia/Tokyo', cityName: 'OSAKA' },
+        { id: '8ir0mYl8Fpo', name: '日本 - 金剛山', tz: 'Asia/Tokyo', cityName: 'NARA' },
+        { id: 'GLQhbRGv5qU', name: '日本 - 新宿', tz: 'Asia/Tokyo', cityName: 'TOKYO' },
+        { id: 'gzb4qKHKGq8', name: '日本 - 東京駅', tz: 'Asia/Tokyo', cityName: 'TOKYO' },
+        { id: 'tUcK5gVHMdo', name: '日本 - 伊丹空港', tz: 'Asia/Tokyo', cityName: 'OSAKA' },
+        { id: 'rGtE0C62fss', name: '日本 - 熊本空港', tz: 'Asia/Tokyo', cityName: 'KUMAMOTO' },
+        { id: 'h63Xam3xLcc', name: '日本 - 北海道岩見沢市', tz: 'Asia/Tokyo', cityName: 'HOKKAIDO' },
+        { id: '8RyR0J8zbbU', name: '日本 - 博多駅', tz: 'Asia/Tokyo', cityName: 'FUKUOKA' }
     ];
 
-    // 東京出発用のダミーデータ
     const tokyoDefault = { id: '', name: '日本 - 東京', tz: 'Asia/Tokyo', cityName: 'TOKYO' };
 
     let player, currentVideo = null, nextVideo = null, departureCity = null;
     let nextDestinationTimer = null;
-    const STAY_DURATION = 60000; 
-    const HIDE_DELAY = 4000; 
+    const STAY_DURATION = 45000; 
+    const HIDE_DELAY = 3000; 
 
     window.addEventListener('load', () => {
         const btn = document.getElementById('start-btn');
@@ -122,12 +121,9 @@
 
     document.getElementById('start-btn').addEventListener('click', () => {
         document.getElementById('overlay').style.display = 'none';
-        
-        // 初回設定：出発はTOKYO、目的地はランダム
         departureCity = tokyoDefault;
         nextVideo = videoList[Math.floor(Math.random() * videoList.length)];
-        
-        loadNewVideo();
+        initPlayer();
         setInterval(updateTimeOnly, 1000);
     });
     
@@ -136,9 +132,10 @@
         return filtered[Math.floor(Math.random() * filtered.length)];
     }
 
-    function loadNewVideo() {
+    function initPlayer() {
         if (player) {
-            player.loadVideoById(nextVideo.id);
+            player.loadVideoById({ videoId: nextVideo.id });
+            player.mute(); 
         } else {
             player = new YT.Player('player', {
                 height: '100%', width: '100%', videoId: nextVideo.id,
@@ -156,24 +153,22 @@
     }
 
     function onPlayerStateChange(event) {
-        // 再生開始時
         if (event.data === YT.PlayerState.PLAYING) {
-            player.unMute();
-            player.setVolume(40);
+            setTimeout(() => {
+                player.unMute();
+                player.setVolume(40);
+            }, 500);
             
             setTimeout(() => {
                 hideInfoScreen();
-                // 動画が始まったら、現在の動画情報をDestinationだったものに更新
                 currentVideo = nextVideo;
                 updateInfoText();
                 startBar(); 
             }, HIDE_DELAY);
         }
-        // バッファリング中（動画読み込み中）
         if (event.data === YT.PlayerState.BUFFERING) {
             showInfoScreen();
         }
-        // 終わった時やエラー時に備えて
         if (event.data === YT.PlayerState.ENDED) {
             nextDestination();
         }
@@ -204,18 +199,15 @@
                 bar.style.transition = `transform ${STAY_DURATION}ms linear`;
                 bar.style.transform = 'scaleX(0)';
                 nextDestinationTimer = setTimeout(nextDestination, STAY_DURATION);
-            }, 45);
+            }, 50);
         });
     }
 
     function nextDestination() {
         clearTimeout(nextDestinationTimer);
-        // 次の出発地は、今見ていた動画の都市になる
-        departureCity = currentVideo;
-        // 次の目的地を新しく選ぶ
+        departureCity = currentVideo || tokyoDefault;
         nextVideo = getRandomVideo(departureCity.id);
-        
-        loadNewVideo();
+        initPlayer();
     }
 
     function updateInfoText() {
@@ -228,13 +220,10 @@
         const opts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
         
         try {
-            // 本編（現在地）の時刻
             if (currentVideo) {
                 document.getElementById('info-time').innerText = new Intl.DateTimeFormat('ja-JP', { ...opts, timeZone: currentVideo.tz }).format(now);
             }
-            // 案内画面：出発地の時刻
             document.querySelector('#departure-info .city-time').innerText = new Intl.DateTimeFormat('ja-JP', { ...opts, timeZone: departureCity.tz }).format(now);
-            // 案内画面：目的地の時刻
             document.querySelector('#arrival-info .city-time').innerText = new Intl.DateTimeFormat('ja-JP', { ...opts, timeZone: nextVideo.tz }).format(now);
         } catch (e) {}
     }

@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="data:,">
-    <title>World Now - White Edition</title>
+    <title>World Now</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff; overflow: hidden; font-family: sans-serif; color: #000; }
         #player-container { position: relative; width: 100%; height: 100%; }
-        #player-wrapper { width: 100%; height: 100%; }
+        /* プレイヤー領域のクリックを無効化 */
+        #player-wrapper { width: 100%; height: 100%; pointer-events: none; }
         
         /* 目的地情報（本編用） */
         #info-display { position: absolute; bottom: 40px; left: 40px; z-index: 7; color: white; text-shadow: 2px 2px 8px rgba(0,0,0,1); pointer-events: none; font-weight: bold; display: none; }
         #info-country { font-size: 32px; margin-bottom: 5px; }
         #info-time { font-size: 24px; opacity: 0.9; }
         
-        /* プログレスバー（左から右へ消える） */
+        /* プログレスバー（左から右へ消える、黒色） */
         #progress-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 8px; background: rgba(0, 0, 0, 0.1); z-index: 8; display: none; }
         #progress-bar { height: 100%; width: 100%; background: #000000; transform-origin: right; transform: scaleX(1); }
         
         /* 広告・読込中の演出画面（フライトインフォメーション風） */
         #curtain { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #fff; /* 背景を白に */
+            background: #fff; 
             z-index: 10; display: none; flex-direction: column; 
             justify-content: center; align-items: center; text-align: center; 
         }
@@ -30,7 +31,7 @@
         #flight-route { 
             display: flex; justify-content: center; align-items: center; 
             width: 600px; padding: 20px;
-            background: rgba(0,0,0,0.05); /* 薄い灰色の背景 */
+            background: rgba(0,0,0,0.05); 
             border-radius: 10px;
         }
 
@@ -38,7 +39,6 @@
         .city-name { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
         .city-time { font-size: 16px; opacity: 0.7; }
         
-        /* Oと△のアイコン (非表示にするか、点線に変更) */
         .separator { margin: 0 10px; font-size: 24px; color: #aaa; }
         
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 20; }
@@ -65,16 +65,13 @@
                     <div class="city-name">Departure</div>
                     <div class="city-time">--:--:--</div>
                 </div>
-                <!-- 点と三角を削除し、矢印かテキストに変更 -->
                 <div class="separator">→</div> 
                 <div class="city-info" id="arrival-info">
                     <div class="city-name">Arrival</div>
                     <div class="city-time">--:--:--</div>
                 </div>
             </div>
-            <!-- 「現在、衛星回線を調整中です」の文章を削除 -->
         </div>
-        <div id="guard"></div>
         <div id="player-wrapper"><div id="player"></div></div>
     </div>
 
@@ -95,13 +92,13 @@
         { id: '-ToX_1jSCsE', name: '日本 - 山梨 - 富士ヶ嶺ゴルフ場', tz: 'Asia/Tokyo', cityName: 'Yamanashi' }
     ];
 
-    let player, currentVideo = null;
+    let player, currentVideo = null, nextVideo = null;
     let nextDestinationTimer = null;
     const STAY_DURATION = 60000; 
 
     document.getElementById('start-btn').addEventListener('click', () => {
         document.getElementById('overlay').style.display = 'none';
-        currentVideo = videoList; 
+        nextVideo = videoList[Math.floor(Math.random() * videoList.length)];
         initPlayer();
         setInterval(updateTimeOnly, 1000);
     });
@@ -110,10 +107,10 @@
         if (player) { player.destroy(); }
         document.getElementById('player-wrapper').innerHTML = '<div id="player"></div>';
         
+        currentVideo = nextVideo;
         let selectedVideo;
         do { selectedVideo = videoList[Math.floor(Math.random() * videoList.length)]; } while (currentVideo.id === selectedVideo.id);
-        
-        currentVideo = selectedVideo; 
+        nextVideo = selectedVideo; 
 
         player = new YT.Player('player', {
             height: '100%', width: '100%', videoId: currentVideo.id,
@@ -150,14 +147,14 @@
         
         if (event.data === YT.PlayerState.BUFFERING) {
             showInfoScreen();
+            player.mute(); 
         }
     }
 
     function showInfoScreen() {
-        // 出発地名と到着地名を設定
         document.querySelector('#departure-info .city-name').innerText = currentVideo.cityName || 'Departure';
-        document.querySelector('#arrival-info .city-name').innerText = "Arrival";
-
+        document.querySelector('#arrival-info .city-name').innerText = nextVideo.cityName || 'Arrival'; /* ここを修正 */
+        
         document.getElementById('curtain').style.display = 'flex';
         document.getElementById('info-display').style.display = 'none';
         document.getElementById('progress-container').style.display = 'none';

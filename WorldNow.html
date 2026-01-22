@@ -81,7 +81,7 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
     const videoList = [
-       { id: 'OuCbntsMsWY', name: '日本 - 千葉 - 成田国際空港', tz: 'Asia/Tokyo', cityName: 'CHIBA' },
+        { id: 'OuCbntsMsWY', name: '日本 - 千葉 - 成田国際空港', tz: 'Asia/Tokyo', cityName: 'CHIBA' },
         { id: 'rnXIjl_Rzy4', name: 'アメリカ - ニューヨーク - タイムズスクエア', tz: 'America/New_York', cityName: 'NEW YORK' },
         { id: 'KdXa0xp7jLs', name: 'アメリカ - ニューヨーク - 自由の女神像', tz: 'America/New_York', cityName: 'NEW YORK' },
         { id: 'R__e74ULCXQ', name: 'アメリカ - ロサンゼルス - ラスベガス', tz: 'America/Los_Angeles', cityName: 'NEVADA' },
@@ -122,15 +122,13 @@
     document.getElementById('start-btn').addEventListener('click', () => {
         document.getElementById('overlay').style.display = 'none';
         departureCity = tokyoDefault;
-        // 初回の目的地も、TOKYO以外から選ぶ
-        nextVideo = getRandomVideo(departureCity.cityName);
+        nextVideo = videoList[Math.floor(Math.random() * videoList.length)];
         initPlayer();
         setInterval(updateTimeOnly, 1000);
     });
     
-    // 引数をIDではなくcityNameに変更し、同名の地域を避けるように修正
-    function getRandomVideo(excludeCityName) {
-        let filtered = videoList.filter(v => v.cityName !== excludeCityName);
+    function getRandomVideo(excludeId) {
+        let filtered = videoList.filter(v => v.id !== excludeId);
         return filtered[Math.floor(Math.random() * filtered.length)];
     }
 
@@ -208,8 +206,7 @@
     function nextDestination() {
         clearTimeout(nextDestinationTimer);
         departureCity = currentVideo || tokyoDefault;
-        // 「今いる場所と同じ地域名」を避けて次の動画を選ぶ
-        nextVideo = getRandomVideo(departureCity.cityName);
+        nextVideo = getRandomVideo(departureCity.id);
         initPlayer();
     }
 

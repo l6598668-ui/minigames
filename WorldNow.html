@@ -23,7 +23,6 @@
             justify-content: center; align-items: center; text-align: center; color: #000;
             opacity: 0; pointer-events: none;
         }
-        /* activeクラスがついた時だけフェードイン、ただし初回はJSで即時表示 */
         #curtain.active { opacity: 1; pointer-events: auto; transition: opacity 1.5s ease-in-out; }
         #curtain.no-fade { opacity: 1; pointer-events: auto; transition: none !important; }
 
@@ -34,21 +33,23 @@
         }
 
         .city-info { text-align: center; width: 45%; }
-        /* スクロールアニメーション用の設定 */
         .city-name-container { height: 40px; overflow: hidden; margin-bottom: 10px; }
         .city-name { font-size: 32px; font-weight: bold; color: #333; line-height: 40px; transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1); }
-        
         .city-label { font-size: 13px; text-transform: uppercase; color: #999; letter-spacing: 2px; margin-bottom: 5px; }
         .city-time { font-size: 20px; font-family: monospace; color: #666; }
         .separator { margin: 0 20px; font-size: 40px; color: #ccc; font-weight: 200; }
         
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 20; }
-        #start-btn { padding: 25px 50px; font-size: 18px; border: 1px solid #ddd; background: #fff; color: #333; cursor: pointer; border-radius: 50px; }
+        #start-btn { 
+            padding: 25px 50px; font-size: 18px; border: 1px solid #ddd; background: #fff; color: #ccc; 
+            cursor: default; border-radius: 50px; transition: 0.5s; pointer-events: none;
+        }
+        #start-btn.ready { color: #333; cursor: pointer; pointer-events: auto; border-color: #333; }
     </style>
 </head>
 <body oncontextmenu="return false;">
     <div id="overlay">
-        <button id="start-btn">Go to the World (2026)</button>
+        <button id="start-btn">System Initializing...</button>
     </div>
     <div id="player-container">
         <div id="info-display"><div id="info-country"></div><div id="info-time"></div></div>
@@ -73,39 +74,39 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-    const videoList = [
-        { id: 'OuCbntsMsWY', name: '日本 - 千葉 - 成田国際空港', tz: 'Asia/Tokyo', cityName: 'CHIBA' },
-        { id: 'rnXIjl_Rzy4', name: 'アメリカ - ニューヨーク - タイムズスクエア', tz: 'America/New_York', cityName: 'NEW YORK' },
-        { id: 'KdXa0xp7jLs', name: 'アメリカ - ニューヨーク - 自由の女神像', tz: 'America/New_York', cityName: 'NEW YORK' },
-        { id: 'R__e74ULCXQ', name: 'アメリカ - ロサンゼルス - ラスベガス', tz: 'America/Los_Angeles', cityName: 'NEVADA' },
-        { id: 'dfVK7ld38Ys', name: '日本 - 東京 - 渋谷スクランブル交差点', tz: 'Asia/Tokyo', cityName: 'TOKYO' },
-        { id: 'gdrNUUf-cQw', name: '南アフリカ - クワズールー・ナタール - テンベ象公園', tz: 'Africa/Johannesburg', cityName: 'SOUTH AFRICA' },
-        { id: '6HYjCFkmDPA', name: '日本 - 沖縄 - 那覇市内', tz: 'Asia/Tokyo', cityName: 'OKINAWA' },
-        { id: 'pJC3BThpdio', name: '日本 - 鹿児島 - 鹿児島空港', tz: 'Asia/Tokyo', cityName: 'KAGOSHIMA' },
-        { id: 'ZdvNQ3D0PY4', name: '日本 - 沖縄 - 那覇空港', tz: 'Asia/Tokyo', cityName: 'OKINAWA' },
-        { id: 'zNahac5x0Tw', name: '日本 - 長崎 - 長崎空港', tz: 'Asia/Tokyo', cityName: 'NAGASAKI' },
-        { id: 'GXg2lP8tZOY', name: '日本 - 鹿児島 - 鹿児島市内', tz: 'Asia/Tokyo', cityName: 'KAGOSHIMA' },
-        { id: '-ToX_1jSCsE', name: '日本 - 山梨 - 富士ヶ嶺ゴルフ場', tz: 'Asia/Tokyo', cityName: 'YAMANASHI' },
-        { id: 'STIN6kB4hCs', name: '日本 - 大阪 - 大阪空港', tz: 'Asia/Tokyo', cityName: 'OSAKA' },
-        { id: '1IB96p46tjE', name: '日本 - 大阪 - 道頓堀', tz: 'Asia/Tokyo', cityName: 'OSAKA' },
-        { id: '8ir0mYl8Fpo', name: '日本 - 奈良 - 金剛山', tz: 'Asia/Tokyo', cityName: 'NARA' },
-        { id: 'GLQhbRGv5qU', name: '日本 - 東京 - 新宿', tz: 'Asia/Tokyo', cityName: 'TOKYO' },
-        { id: 'gzb4qKHKGq8', name: '日本 - 東京 - 東京駅', tz: 'Asia/Tokyo', cityName: 'TOKYO' },
-        { id: 'tUcK5gVHMdo', name: '日本 - 大阪 - 大阪国際空港 伊丹', tz: 'Asia/Tokyo', cityName: 'OSAKA' },
-        { id: 'rGtE0C62fss', name: '日本 - 熊本 - 熊本空港', tz: 'Asia/Tokyo', cityName: 'KUMAMOTO' },
-        { id: 'h63Xam3xLcc', name: '日本 - 北海道 - 岩見沢市', tz: 'Asia/Tokyo', cityName: 'HOKKAIDO' },
-        { id: '8RyR0J8zbbU', name: '日本 - 福岡 - JR博多駅', tz: 'Asia/Tokyo', cityName: 'FUKUOKA' }
-    ];
-
+    let videoList = [];
     const tokyoDefault = { id: '', name: '日本 - 東京', tz: 'Asia/Tokyo', cityName: 'TOKYO' };
     let player, currentVideo = null, nextVideo = null, departureCity = tokyoDefault;
     let nextDestinationTimer = null;
     const STAY_DURATION = 45000; 
 
+    // データ読み込みと3秒待機
+    window.addEventListener('load', async () => {
+        const btn = document.getElementById('start-btn');
+        const startTime = Date.now();
+        
+        try {
+            const response = await fetch('locations.json');
+            videoList = await response.json();
+            
+            const elapsed = Date.now() - startTime;
+            const waitTime = Math.max(0, 3000 - elapsed);
+            
+            setTimeout(() => {
+                btn.innerText = "Go to the World (2026)";
+                btn.classList.add('ready');
+            }, waitTime);
+            
+        } catch (e) {
+            btn.innerText = "Error: locations.json not found";
+            console.error(e);
+        }
+    });
+
     document.getElementById('start-btn').addEventListener('click', () => {
         document.getElementById('overlay').style.display = 'none';
         const curtain = document.getElementById('curtain');
-        curtain.classList.add('no-fade'); // 初回はフェードなし
+        curtain.classList.add('no-fade'); // 初回のみフェードなしで即表示
         
         nextVideo = videoList[Math.floor(Math.random() * videoList.length)];
         initPlayer();
@@ -114,7 +115,7 @@
 
     function initPlayer() {
         if (player) {
-            player.mute(); // 次の動画読み込み時も一旦ミュート
+            player.mute();
             player.loadVideoById({ videoId: nextVideo.id });
         } else {
             player = new YT.Player('player', {
@@ -127,15 +128,18 @@
     }
 
     function onPlayerStateChange(event) {
-        // 再生開始時
         if (event.data === YT.PlayerState.PLAYING) {
             currentVideo = nextVideo;
-            // 広告音対策：カーテンが消える直前までミュートを維持
+            // 3秒待ってからカーテンを消し、その後に音を出す（広告音・ロゴ対策）
             setTimeout(() => {
                 hideInfoScreen();
-                setTimeout(() => { player.unMute(); player.setVolume(40); }, 1000);
                 updateInfoText();
                 startBar(); 
+                // カーテンが消え始めてから音を徐々に上げる
+                setTimeout(() => { 
+                    player.unMute(); 
+                    player.setVolume(40); 
+                }, 1000);
             }, 3000);
         }
         if (event.data === YT.PlayerState.ENDED) { nextDestination(); }
@@ -145,7 +149,7 @@
         const depEl = document.querySelector('#departure-info .city-name');
         const arrEl = document.querySelector('#arrival-info .city-name');
 
-        // スクロール演出：一度下に消してから、新しい文字を入れて上から戻す
+        // スクロール演出
         depEl.style.transform = 'translateY(40px)';
         arrEl.style.transform = 'translateY(40px)';
 
@@ -167,7 +171,7 @@
     function hideInfoScreen() {
         const curtain = document.getElementById('curtain');
         curtain.classList.remove('active');
-        curtain.classList.remove('no-fade'); // 次回からはフェード有効
+        curtain.classList.remove('no-fade'); 
         document.getElementById('info-display').style.display = 'block';
         document.getElementById('progress-container').style.display = 'block';
     }
@@ -180,7 +184,10 @@
             setTimeout(() => {
                 bar.style.transition = `transform ${STAY_DURATION}ms linear`;
                 bar.style.transform = 'scaleX(0)';
-                nextDestinationTimer = setTimeout(() => { showInfoScreen(); setTimeout(nextDestination, 1500); }, STAY_DURATION);
+                nextDestinationTimer = setTimeout(() => { 
+                    showInfoScreen(); 
+                    setTimeout(nextDestination, 1500); 
+                }, STAY_DURATION);
             }, 50);
         });
     }

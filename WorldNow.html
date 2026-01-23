@@ -52,7 +52,6 @@
     let apiReady = false;
     const STAY_DURATION = 45000; 
 
-    // YouTube API準備完了時
     function onYouTubeIframeAPIReady() {
         apiReady = true;
         checkReady();
@@ -64,9 +63,7 @@
             const textData = await response.text();
             videoList = JSON.parse(textData);
             checkReady();
-        } catch (e) { 
-            console.error("Data error:", e); 
-        }
+        } catch (e) { console.error("Data error:", e); }
     }
 
     function checkReady() {
@@ -97,10 +94,7 @@
         } else {
             player = new YT.Player('player', {
                 height: '100%', width: '100%', videoId: nextVideo.id,
-                playerVars: { 
-                    'autoplay': 1, 'controls': 0, 'disablekb': 1, 'rel': 0, 
-                    'mute': 1, 'origin': window.location.origin, 'enablejsapi': 1 
-                },
+                playerVars: { 'autoplay': 1, 'controls': 0, 'disablekb': 1, 'rel': 0, 'mute': 1, 'origin': window.location.origin, 'enablejsapi': 1 },
                 events: { 'onStateChange': onPlayerStateChange }
             });
         }
@@ -110,12 +104,13 @@
     function onPlayerStateChange(event) {
         if (event.data === YT.PlayerState.PLAYING) {
             currentVideo = nextVideo;
+            // 7秒（7000ms）待機してから表示
             setTimeout(() => {
                 hideInfoScreen();
                 updateInfoText();
                 startBar(); 
                 setTimeout(() => { player.unMute(); player.setVolume(40); }, 1000);
-            }, 3000);
+            }, 7000);
         }
         if (event.data === YT.PlayerState.ENDED) { nextDestination(); }
     }
@@ -176,7 +171,6 @@
         } catch (e) {}
     }
 </script>
-<!-- APIスクリプトを一番最後に読み込む -->
 <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

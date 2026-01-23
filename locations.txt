@@ -34,5 +34,9 @@
   { "id": "N1_qXtzWA30", "name": "日本 - 愛知 - 中部国際空港", "tz": "Asia/Tokyo", "cityName": "AICHI" },
   { "id": "ZN4gh5IOowM", "name": "日本 - 東京 - 東京駅", "tz": "Asia/Tokyo", "cityName": "TOKYO" },
   { "id": "DU-tsAEboZo", "name": "日本 - 東京 - 羽田空港", "tz": "Asia/Tokyo", "cityName": "TOKYO" },
-  { "id": "VM18f-IIUTw", "name": "日本 - 東京 - 汐留", "tz": "Asia/Tokyo", "cityName": "TOKYO" }
+  { "id": "VM18f-IIUTw", "name": "日本 - 東京 - 汐留", "tz": "Asia/Tokyo", "cityName": "TOKYO" },
+  { "id": "OJYcNsIpyx0", "name": "日本 - 神奈川 - 茅ヶ崎サザンビーチ", "tz": "Asia/Tokyo", "cityName": "KANAGAWA" },
+  { "id": "5jHCxMEGor0", "name": "日本 - 沖縄 - 石垣島", "tz": "Asia/Tokyo", "cityName": "OKINAWA" },
+  { "id": "Tlc3uegvdrQ", "name": "日本 - 沖縄 - モトブテラス", "tz": "Asia/Tokyo", "cityName": "OKINAWA" },
+  { "id": "XXVXVSLbjAk", "name": "日本 - 和歌山 - 高野山・金剛峯寺", "tz": "Asia/Tokyo", "cityName": "WAKAYAMA" }
 ]

@@ -17,7 +17,7 @@ jobs:
           
           # 日本時間に設定して1行目に時刻を書き込む
           export TZ="Asia/Tokyo"
-          echo "最終更新: $(date +'%Y/%m/%d %H:%M')" > NewsTyping/news.txt
+          echo "最終更新: $(date +'%Y/%m/%d %H:%M')" > NewsTyping/News.txt
           
           # ニュースデータを追記 (>> を使用)
           sed -n '/<item>/,$p' raw_rss.xml | \

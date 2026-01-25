@@ -59,7 +59,7 @@
 
     async function loadData() {
         try {
-            const response = await fetch('WorldNow/locations.txt');
+            const response = await fetch('locations.txt');
             const textData = await response.text();
             videoList = JSON.parse(textData);
             checkReady();

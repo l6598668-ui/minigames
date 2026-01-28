@@ -30,7 +30,7 @@
     </style>
 </head>
 <body>
-    <div id="overlay"><button id="start-btn">Connecting...</button></div>
+    <div id="overlay"><button id="start-btn">旅に出かける（音あり📣）</button></div>
     <div id="player-container">
         <div id="info-display"><div id="info-country"></div><div id="info-time"></div></div>
         <div id="progress-container"><div id="progress-bar"></div></div>
@@ -70,7 +70,7 @@
         if (videoList.length > 0 && apiReady) {
             const btn = document.getElementById('start-btn');
             setTimeout(() => {
-                btn.innerText = "Go to the World";
+                btn.innerText = "旅に出かける（音あり📣）";
                 btn.classList.add('ready');
             }, 3000);
         }

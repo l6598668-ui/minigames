@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Typing</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 90%; max-width: 500px; text-align: center; }
+        #word { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #333; line-height: 1.4; min-height: 3em; }
+        input { width: 100%; font-size: 18px; padding: 12px; border: 2px solid #ddd; border-radius: 10px; outline: none; box-sizing: border-box; }
+        input:focus { border-color: #007bff; }
+        
+        /* 詳細表示エリア */
+        #detail-area { display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; text-align: left; }
+        #detail-text { font-size: 14px; color: #555; margin-bottom: 10px; }
+        #detail-link { color: #007bff; text-decoration: none; font-weight: bold; display: block; margin-bottom: 15px; }
+        #next-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; }
+
+        .info { margin-top: 15px; font-size: 14px; color: #888; }
+        .back { margin-top: 20px; display: block; color: #007bff; text-decoration: none; font-size: 14px; }
+        
+        /* 一覧表示用 */
+        #setup-area { text-align: left; margin-bottom: 20px; }
+        #news-list-container { max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 10px; margin-bottom: 10px; background: #fff; }
+        .news-item { font-size: 13px; margin-bottom: 5px; color: #666; border-bottom: 1px solid #f9f9f9; }
+        
+        /* 追加：更新時刻のスタイル */
+        #update-time { font-size: 12px; color: #999; margin-bottom: 8px; text-align: right; }
+
+        #start-btn { background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 18px; cursor: pointer; width: 100%; }
+        #start-btn:disabled { background: #ccc; }
+        #game-area { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 1. ニュース一覧画面 -->
+        <div id="setup-area">
+            <h3>本日のニュース一覧</h3>
+            <!-- 追加：更新時刻の表示場所 -->
+            <div id="update-time"></div>
+            <div id="news-list-container">ニュースを読み込んでいます...</div>
+            <button id="start-btn" disabled>スタート</button>
+        </div>
+
+        <!-- 2. タイピング画面 -->
+        <div id="game-area">
+            <div id="word">準備中...</div>
+            <input type="text" id="input-field" placeholder="ここに入力してください" autocomplete="off">
+            
+            <div id="detail-area">
+                <div id="detail-text">正解！ニュースの詳細を読みますか？</div>
+                <a id="detail-link" href="#" target="_blank">👉 詳しくはこちら（Yahoo!ニュース）</a>
+                <button id="next-btn">次のニュースへ</button>
+            </div>
+
+            <div class="info" id="status">残り: --</div>
+        </div>
+        
+        <a href="../index.html" class="back">← ホームに戻る</a>
+    </div>
+
+<script>
+    const wordDisplay = document.getElementById('word');
+    const inputField = document.getElementById('input-field');
+    const statusDisplay = document.getElementById('status');
+    const setupArea = document.getElementById('setup-area');
+    const gameArea = document.getElementById('game-area');
+    const detailArea = document.getElementById('detail-area');
+    const detailLink = document.getElementById('detail-link');
+    const nextBtn = document.getElementById('next-btn');
+    const newsListContainer = document.getElementById('news-list-container');
+    const startBtn = document.getElementById('start-btn');
+    const updateTimeDisplay = document.getElementById('update-time');
+
+    let newsData = [];
+    let currentIndex = 0;
+
+    async function init() {
+        try {
+            const res = await fetch('./NewsTyping/news.txt?t=' + Date.now());
+            if (!res.ok) throw new Error("news.txtが見つかりません");
+
+            const text = await res.text();
+            let lines = text.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            
+            // 1行目が時刻データ（最終更新: ...）であれば抜き出す
+            if (lines.length > 0 && lines[0].startsWith('最終更新')) {
+                updateTimeDisplay.textContent = lines.shift();
+            }
+
+            newsData = [];
+            for (let i = 0; i < lines.length; i += 2) {
+                if (lines[i] && lines[i+1] && lines[i+1].startsWith('http')) {
+                    newsData.push({
+                        title: lines[i],
+                        link: lines[i+1]
+                    });
+                }
+            }
+
+            if (newsData.length > 0) {
+                newsListContainer.innerHTML = newsData.map((item, i) => 
+                    `<div class="news-item">${i+1}. ${item.title}</div>`
+                ).join('');
+                startBtn.disabled = false;
+            } else {
+                newsListContainer.textContent = "表示できるニュースがありません。";
+            }
+        } catch (e) {
+            newsListContainer.textContent = "読み込みエラーが発生しました。";
+            console.error(e);
+        }
+    }
+
+    startBtn.addEventListener('click', () => {
+        setupArea.style.display = 'none';
+        gameArea.style.display = 'block';
+        updateDisplay();
+    });
+
+    function updateDisplay() {
+        if (currentIndex < newsData.length) {
+            wordDisplay.textContent = newsData[currentIndex].title;
+            statusDisplay.textContent = `残り: ${newsData.length - currentIndex} 件`;
+            inputField.value = '';
+            inputField.disabled = false;
+            inputField.style.display = 'block';
+            detailArea.style.display = 'none';
+            inputField.focus();
+        } else {
+            wordDisplay.textContent = "✨ 本日のニュース終了！ ✨";
+            inputField.style.display = 'none';
+            statusDisplay.textContent = "お疲れ様でした";
+        }
+    }
+
+    inputField.addEventListener('input', () => {
+        if (inputField.value === newsData[currentIndex].title) {
+            inputField.disabled = true;
+            detailLink.href = newsData[currentIndex].link;
+            detailArea.style.display = 'block';
+            nextBtn.focus();
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        currentIndex++;
+        updateDisplay();
+    });
+
+    init();
+</script>
+</body>
+</html>
